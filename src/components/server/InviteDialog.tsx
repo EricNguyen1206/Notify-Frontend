@@ -1,5 +1,4 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 
 import { toast } from "react-toastify";
@@ -34,7 +33,8 @@ interface PropType {
 const InviteDialog = (props: PropType) => {
   const { server, channel, children } = props;
 
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const params = useParams();
 
   const [serverInviteLink, setServerInviteLink] = useState<string>("");

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useServerStore } from "@/lib/store";
-import { useSession } from "next-auth/react";
 
 import {
   Accordion,
@@ -37,7 +36,8 @@ interface PropType {
 const ServerCategoryItem = (props: PropType) => {
   const { category } = props;
 
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const params = useParams();
   const serverId = params?.id;

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useFriendStore } from "@/lib/store";
 import { getAllDirectMessagesByEmail } from "@/utils/actions/api";
@@ -11,7 +10,8 @@ type Props = {
 };
 
 const DMAuthProvider = ({ children }: Props) => {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const router = useRouter();
   const pathName = usePathname();
 

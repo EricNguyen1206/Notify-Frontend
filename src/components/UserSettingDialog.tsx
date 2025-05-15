@@ -1,10 +1,8 @@
 "use client";
 
 import React, { ReactNode, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
 
-import { handleSignOut } from "@/lib/action";
-import { handleFileUpload } from "@/utils/supabase/client";
+// import { handleSignOut } from "@/lib/action";
 import { editUserByUserId, getUserByEmail } from "@/utils/actions/api";
 import { censorPassword, getSummaryName } from "@/lib/helper";
 
@@ -18,13 +16,18 @@ import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
+import { handleFileUpload } from "@/utils/supabase";
 
 type ParentComponentProps = {
   children: ReactNode;
 };
 
 const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
-  const { data: session, update }: any = useSession();
+  // const { data: session, update }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com", mute: false, deafen: false, avatar: "https://i.pravatar.cc/150?img=1", provider: "email", password: "password"}}
+  const update = () => {
+    console.log("update");
+  }
 
   const [formData, setFormData] = useState<any>({
     id: "",
@@ -94,10 +97,10 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
     // Update session
     const profile = await getUserByEmail(session?.user?.email);
 
-    await update({
-      ...session,
-      user: profile?.user,
-    });
+    // await update({
+    //   ...session,
+    //   user: profile?.user,
+    // });
 
     setLoading(false);
     avatarRef.current.value = null;
@@ -161,7 +164,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                       className="flex items-center gap-2"
                       variant="destructive"
                       onClick={() => {
-                        handleSignOut();
+                        // handleSignOut();
                       }}
                     >
                       <IoIosLogOut size={20} />

@@ -1,5 +1,4 @@
 import { useServerStore, useSocketStore } from "@/lib/store";
-import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -28,7 +27,8 @@ interface PropType {
 const DeleteChannelContext = (props: PropType) => {
   const { channel, children } = props;
 
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const params = useParams();
 
   const socket = useSocketStore((state) => {

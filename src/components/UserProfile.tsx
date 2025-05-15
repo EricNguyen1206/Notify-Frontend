@@ -1,7 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-
 import { FaMicrophone } from "react-icons/fa6";
 import { IoHeadsetSharp } from "react-icons/io5";
 import { IoMdSettings } from "react-icons/io";
@@ -18,7 +16,12 @@ import {
 import UserSettingDialog from "./UserSettingDialog";
 
 const UserProfile = () => {
-  const { data: session, update }: any = useSession();
+  // const { data: session, update }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com", mute: false, deafen: false, avatar: "https://i.pravatar.cc/150?img=1"}}
+
+  const update = (payload: any) => {
+    console.log("update", payload);
+  }
 
   const updateMuteSession = async () => {
     await update({

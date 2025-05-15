@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 
 import { joinServerByInviteLink } from "@/utils/actions/api";
 
 const ServerInviteLinkPage = () => {
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const params = useParams();
   const pathname = usePathname();

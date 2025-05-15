@@ -6,7 +6,6 @@ import { Provider } from "@supabase/supabase-js";
 import { useTransition } from "react";
 import { FaGithub } from "react-icons/fa";
 // import { toast } from "react-toastify";
-import { handleGithubLogin } from "@/lib/action";
 
 export default function GithubLoginButton() {
   // const router = useRouter();
@@ -20,7 +19,7 @@ export default function GithubLoginButton() {
       // } else {
       //   toast.error(errorMessage);
       // }
-      await handleGithubLogin()
+      // await handleGithubLogin()
     });
   };
   return (

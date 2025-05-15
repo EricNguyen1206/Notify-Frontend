@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Discord Clone | Login",
-  description: "Developed by minhtrifit",
+  description: "Developed by EricNguyen",
 };
 
 export default function Layout({

@@ -1,4 +1,3 @@
-// app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { serialize } from 'cookie'
 
@@ -13,14 +12,11 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(body),
     })
 
-    console.log("TEST res", res);
-
     if (!res.ok) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 })
     }
 
     const data = await res.json()
-    console.log("TEST", data);
     const token = data.token
 
     // Set token vào cookie (HttpOnly)

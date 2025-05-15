@@ -1,6 +1,5 @@
 "use server";
 
-import { auth, signIn, signOut } from "./auth";
 import { createNewUser, getUserByEmail, loginByEmail } from "../utils/actions/api";
 import { UserType } from "@/types";
 import { revalidatePath } from "next/cache";
@@ -75,19 +74,6 @@ export const handleEmailLogin = async (prevState: any, form: FormData) => {
     }
     return { error: "An error occurred during login" };
   }
-};
-
-export const handleGithubLogin = async () => {
-  await signIn("github");
-};
-
-export const getUserSession = async () => {
-  const session = await auth();
-  return session;
-};
-
-export const handleSignOut = async () => {
-  await signOut();
 };
 
 export const handleLeaveServerAction = async () => {

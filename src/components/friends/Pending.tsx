@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useFriendStore, useSocketStore } from "@/lib/store";
-import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
 
 import { UserType } from "@/types";
@@ -21,7 +20,8 @@ import { acceptFriendRequest, ignoreFriendRequest } from "@/lib/socket";
 import { getSummaryName } from "@/lib/helper";
 
 const Pending = () => {
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const [list, setList] = useState<UserType[]>([]);
 

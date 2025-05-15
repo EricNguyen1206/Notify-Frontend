@@ -22,14 +22,22 @@ const LoginEmailForm = () => {
         email: email,
         password: password,
       };
-      const res = await loginByEmail(newUser);
-      
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(newUser),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      })
+      const data = await res.json();
+      console.log("TEST 1", data);
 
-      if (res) {
+      if (data) {
         toast.success("Login successfully");
         router.push("/dashboard/friends");
       } else {
-        toast.error(res.message ?? "Login failed");
+        toast.error(data.message ?? "Login failed");
       }
     } catch (error) {
       toast.error("An error occurred during login");

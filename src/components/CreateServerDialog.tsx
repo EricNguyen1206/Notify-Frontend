@@ -19,18 +19,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { createNewServer } from "@/utils/actions/api";
-import { handleFileUpload } from "@/utils/supabase/client";
 import { ServerType } from "@/types";
-import { Session } from "next-auth";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { IoAdd } from "react-icons/io5";
 import { MdClear } from "react-icons/md";
 import { toast } from "react-toastify";
+import { handleFileUpload } from "@/utils/supabase";
 
 interface PropType {
-  session: Session | null;
+  session: any;
 }
 
 const CreateServerDialog = (props: PropType) => {

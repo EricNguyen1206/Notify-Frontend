@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -23,7 +22,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <NextAuthProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -33,7 +31,6 @@ export default function RootLayout({
             <ToastContainer position="bottom-left" theme="colored" />
             {children}
           </ThemeProvider>
-        </NextAuthProvider>
       </body>
     </html>
   );

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 import { MdDashboard } from "react-icons/md";
 import { FaDatabase } from "react-icons/fa";
@@ -10,10 +9,11 @@ import { IoIosLogOut } from "react-icons/io";
 
 import { ThemeToggle } from "../ThemeToggle";
 
-import { handleSignOut } from "@/lib/action";
+// import { handleSignOut } from "@/lib/action";
 
 const AdminSlidebar = () => {
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const pathName = usePathname();
 
@@ -58,7 +58,8 @@ const AdminSlidebar = () => {
         <p className="text-[15px] font-semibold max-w-[200px] truncate">
           Welcome {session?.user?.name}
         </p>
-        <form action={handleSignOut}>
+        {/* <form action={handleSignOut}> */}
+        <form action={() => {}}>
           <button className="bg-red-500 hover:bg-red-400 text-white p-2 rounded-md flex items-center justify-center">
             <IoIosLogOut size={20} />
           </button>

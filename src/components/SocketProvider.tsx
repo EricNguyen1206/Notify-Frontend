@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useSocket } from "@/hooks/useSocket";
-import { useSession } from "next-auth/react";
 import { useSocketStore } from "@/lib/store";
 
 import { GetSocketConnect, StartListeners } from "@/lib/socket";
@@ -13,7 +12,7 @@ type Props = {
 };
 
 const SocketProvider = ({ children }: Props) => {
-  const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const socket = useSocket(process.env.NEXT_PUBLIC_API_URL!, {
     autoConnect: false,

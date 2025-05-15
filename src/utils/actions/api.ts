@@ -47,26 +47,24 @@ export const createNewUser = async (user: UserType) => {
 };
 
 export const loginByEmail = async (user: UserType) => {
+  console.log("TEST 0", user);
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/users/login`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          email: user.email,
-          password: user.password,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // ⚠️ Bắt buộc để cookie được lưu
-      }
-    );
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: user.email,
+        password: user.password,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
     const data = await res.json();
-    console.log("TEST", data);
+    console.log("TEST 1", data);
     return data;
   } catch (err: any) {
-    console.log("API CALL ERROR:", err?.response?.data);
+    console.log("API CALL ERROR:", err);
     return err?.response?.data;
   }
 };

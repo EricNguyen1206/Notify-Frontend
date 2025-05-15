@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useServerStore } from "@/lib/store";
 
 import { getDetailServerById } from "@/utils/actions/api";
@@ -10,7 +9,8 @@ import { getDetailServerById } from "@/utils/actions/api";
 import ChannelMainChat from "@/components/server/ChannelMainChat";
 
 const DetailChannelPage = () => {
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123"}}
 
   const params = useParams();
   // const channelId = params?.["channel-id"];

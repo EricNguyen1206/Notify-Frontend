@@ -1,7 +1,6 @@
 "use client";
 
 import { useFriendStore, useSocketStore } from "@/lib/store";
-import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,7 +8,7 @@ import { UserType } from "@/types";
 import { getSummaryName } from "@/lib/helper";
 
 const FriendOnline = () => {
-  const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const socket = useSocketStore((state) => {
     return state.socket;

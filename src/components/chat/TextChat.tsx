@@ -1,5 +1,4 @@
 import { useFriendStore, useSocketStore } from "@/lib/store";
-import { useSession } from "next-auth/react";
 
 import {
   Tooltip,
@@ -31,7 +30,8 @@ const TextChat = (props: PropType) => {
   const { userIdSession, user, chat, friend, mainRef, handleDeleteChatById } =
     props;
 
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const socket = useSocketStore((state) => {
     return state.socket;

@@ -8,7 +8,6 @@ import React, {
   useState,
 } from "react";
 import { useParams, usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useServerStore, useSocketStore } from "@/lib/store";
 import { v4 as uuidv4 } from "uuid";
 import { saveAs } from "file-saver";
@@ -42,8 +41,8 @@ import {
   getUserById,
 } from "@/utils/actions/api";
 import { formatDateStr, getSummaryName } from "@/lib/helper";
-import { handleFileExtUpload, handleFileUpload } from "@/utils/supabase/client";
 import { ApplicationFileType } from "@/lib/utils";
+import { handleFileExtUpload, handleFileUpload } from "@/utils/supabase";
 
 export interface FormDataState {
   message: string;
@@ -52,8 +51,8 @@ export interface FormDataState {
 const ChannelMainChat = () => {
   const params = useParams();
   const pathName = usePathname();
-  const { data: session }: any = useSession();
-
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const [formData, setFormData] = useState<FormDataState>({
     message: "",
   });

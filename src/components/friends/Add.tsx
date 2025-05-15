@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useSession } from "next-auth/react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "../ui/button";
@@ -10,7 +9,8 @@ import { useSocketStore } from "@/lib/store";
 import { toast } from "react-toastify";
 
 const Add = () => {
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const socket = useSocketStore((state) => {
     return state.socket;

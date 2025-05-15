@@ -1,7 +1,6 @@
 "use client";
 
 import { useServerStore, useSocketStore } from "@/lib/store";
-import { useSession } from "next-auth/react";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
@@ -22,8 +21,8 @@ import { getDetailServerById } from "@/utils/actions/api";
 import { handleLeaveServerAction } from "@/lib/action";
 
 const ServerSubSlidebar = () => {
-  const { data: session }: any = useSession();
-
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const params = useParams();
   const serverId = params?.id;
 

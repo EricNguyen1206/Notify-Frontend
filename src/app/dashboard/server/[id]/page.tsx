@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useServerStore } from "@/lib/store";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,8 +10,8 @@ import { getDetailServerById } from "@/utils/actions/api";
 import { getSummaryName } from "@/lib/helper";
 
 const DetailServerPage = () => {
-  const { data: session }: any = useSession();
-
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123"}}
   const params = useParams();
 
   const server = useServerStore((state) => {
@@ -46,7 +45,8 @@ const DetailServerPage = () => {
   useEffect(() => {
     handleGetDetailServer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
+  }, []);
+  // }, [session]);
 
   return (
     <div className="w-[100%] p-4 flex flex-col items-center">

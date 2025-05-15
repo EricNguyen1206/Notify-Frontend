@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useServerStore } from "@/lib/store";
 
 import { JitsiMeeting } from "@jitsi/react-sdk";
@@ -10,7 +9,7 @@ import { JitsiMeeting } from "@jitsi/react-sdk";
 import { getChannelById, getDetailServerById } from "@/utils/actions/api";
 
 const ChannelVoicePage = () => {
-  const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const JITSI_MEET_DOMAIN = "meet.jit.si";
 

@@ -4,7 +4,6 @@ import { useSocketStore } from "@/lib/store";
 import { ServerType, UserType } from "@/types";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -15,8 +14,8 @@ import { getSummaryName } from "@/lib/helper";
 const ServerMemberSlidebar = () => {
   const params = useParams();
 
-  const { data: session }: any = useSession();
-
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const [members, setMembers] = useState<
     { role: string; members: UserType[] }[]
   >([]);

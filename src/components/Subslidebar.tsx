@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { useFriendStore, useSocketStore } from "@/lib/store";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { useSession } from "next-auth/react";
 import {
   getAllDirectMessagesByEmail,
   getAllFriendsByEmail,
@@ -30,7 +29,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Subslidebar = () => {
-  const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const router = useRouter();
   const category = usePathname().split("/dashboard/")[1];
 

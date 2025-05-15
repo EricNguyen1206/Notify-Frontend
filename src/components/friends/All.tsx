@@ -22,13 +22,12 @@ import { IoSearch } from "react-icons/io5";
 import { IoMdMore } from "react-icons/io";
 import { MdClear } from "react-icons/md";
 import { AiOutlineMessage } from "react-icons/ai";
-import { useSession } from "next-auth/react";
-
 const All = () => {
   const [searchInput, setSearchInput] = useState<string>("");
   const [searchFriends, setSearchFriends] = useState<UserType[]>([]);
 
-  const { data: session }: any = useSession();
+  // const { data: session }: any = useSession();
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
 
   const socket = useSocketStore((state) => {
     return state.socket;
