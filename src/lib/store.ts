@@ -43,17 +43,12 @@ interface FriendState {
 }
 
 interface ServerState {
-  server: ServerType | null;
-  loading: boolean;
-  categories: CategoryType[];
-  channel: ChannelType | null;
-  channelChats: ChannelMessageChatType[];
-  setServer: (server: ServerType) => void;
-  setLoading: (value: boolean) => void;
-  updateCategories: (categories: CategoryType[]) => void;
-  setChannel: (newChannel: ChannelType) => void;
-  updateChannelChats: (channelChats: ChannelMessageChatType[]) => void;
-  setChannelChats: (chat: ChannelMessageChatType) => void;
+  servers: ServerType[];
+  currentServer: ServerType | null;
+  currentChannel: ChannelType | null;
+  setServers: (servers: ServerType[]) => void;
+  setCurrentServer: (server: ServerType | null) => void;
+  setCurrentChannel: (channel: ChannelType | null) => void;
 }
 
 export const useSocketStore = create<SocketState>()(
@@ -113,20 +108,11 @@ export const useFriendStore = create<FriendState>()(
 
 export const useServerStore = create<ServerState>()(
   devtools((set) => ({
-    server: null,
-    loading: false,
-    categories: [],
-    channel: null,
-    channelChats: [],
-    setServer: (server: ServerType) => set((state) => ({ server: server })),
-    setLoading: (value: boolean) => set((state) => ({ loading: value })),
-    updateCategories: (newCategories: CategoryType[]) =>
-      set(() => ({ categories: newCategories })),
-    setChannel: (newChannel: ChannelType) =>
-      set((state) => ({ channel: newChannel })),
-    updateChannelChats: (channelChats: ChannelMessageChatType[]) =>
-      set(() => ({ channelChats: channelChats })),
-    setChannelChats: (chat: ChannelMessageChatType) =>
-      set((state) => ({ channelChats: [...state.channelChats, chat] })),
+    servers: [],
+    currentServer: null,
+    currentChannel: null,
+    setServers: (servers) => set(() => ({ servers })),
+    setCurrentServer: (server) => set(() => ({ currentServer: server })),
+    setCurrentChannel: (channel) => set(() => ({ currentChannel: channel })),
   }))
 );

@@ -1,4 +1,6 @@
+import Slidebar from "@/components/Slidebar";
 import SocketProvider from "@/components/SocketProvider";
+import ScreenProvider from "@/components/providers/ScreenProvider";
 import ServerMemberSlidebar from "@/components/server/ServerMemberSlidebar";
 import ServerSubSlidebar from "@/components/server/ServerSubSlidebar";
 import type { Metadata } from "next";
@@ -14,7 +16,10 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <SocketProvider>
+    <ScreenProvider>
+    <div className="dark:bg-secondary-gray flex h-screen max-h-screen">
+      <Slidebar />
+      <SocketProvider>
       <div className="dark:bg-secondary-gray flex h-screen max-h-screen">
         <ServerSubSlidebar />
         <div className="w-[calc(100vw-320px)] flex overflow-y-auto">
@@ -27,5 +32,8 @@ export default function Layout({
         </div>
       </div>
     </SocketProvider>
+    </div>
+  </ScreenProvider>
+
   );
 }

@@ -5,10 +5,6 @@ import { useEffect } from "react";
 import { useFriendStore, useSocketStore } from "@/lib/store";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import {
-  getAllDirectMessagesByEmail,
-  getAllFriendsByEmail,
-} from "@/utils/actions/api";
 import { getSummaryName } from "@/lib/helper";
 
 import { DirectMessageChatType, UserType } from "@/types";
@@ -27,13 +23,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { fetchFriends } from "@/lib/redux/features/friendSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hook";
+import { RootState } from "@/lib/redux/store";
 
 const Subslidebar = () => {
   const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
+  const dispatch = useAppDispatch();
+  const friends = useAppSelector((state: RootState) => state.friend.friends);
   const router = useRouter();
-  const category = usePathname().split("/dashboard/")[1];
+  const category = usePathname().split("/dashboard/")[1]; 
 
-  const Links = [
+  const Channels = [
     {
       name: "Friends",
       url: "/dashboard/friends",
@@ -59,17 +60,6 @@ const Subslidebar = () => {
     return state.setPendings;
   });
 
-  const updateFriends = useFriendStore((state) => {
-    return state.updateFriends;
-  });
-
-  const setLoading = useFriendStore((state) => {
-    return state.setLoading;
-  });
-
-  const directMessages = useFriendStore((state) => {
-    return state.directMessages;
-  });
 
   const updateDirectMessages = useFriendStore((state) => {
     return state.updateDirectMessages;
@@ -79,12 +69,15 @@ const Subslidebar = () => {
     return state.filterDirectMessages;
   });
 
+  const handleGetFriendsFromDB = async (userId: string) => {
+    dispatch(fetchFriends(userId));
+  };
+
   useEffect(() => {
     if (socket) {
       socket.on(
         "get_friend_request",
         (rs: { message: string; user: UserType }) => {
-          // console.log("Get friend request:", rs);
           const { user }: any = rs;
 
           setPendings(user);
@@ -95,41 +88,20 @@ const Subslidebar = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
 
-  const handleGetFriendsFromDB = async () => {
-    setLoading(true);
-    const res = await getAllFriendsByEmail(session?.user?.email);
-    if (res?.message === "Get friends successfully") {
-      // console.log("CHECK RES FRIENDS", res);
-      updateFriends(res?.friends);
-    }
-    setLoading(false);
-  };
-
-  const handleGetDirectMessagesFromDB = async () => {
-    const res = await getAllDirectMessagesByEmail(session?.user?.email);
-    if (res?.message === "Get direct messages successfully") {
-      // console.log("CHECK RES DIRECT MESS", res);
-      if (res?.friends) updateDirectMessages(res?.friends);
-    }
-  };
-
   useEffect(() => {
-    if (session?.user?.email) {
-      handleGetFriendsFromDB();
-      handleGetDirectMessagesFromDB();
+    if (session?.user?.id) {
+      handleGetFriendsFromDB(session?.user?.id);
+      // handleGetDirectMessagesFromDB();
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.email]);
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (socket) {
       socket.on("new_friend", (rs: { message: string; user: UserType }) => {
-        // console.log("Get friend request:", rs);
         if (rs?.message === "You have a new friend") {
           toast.info(`You and ${rs?.user?.email} just become a friend`);
 
-          if (session?.user?.email) handleGetFriendsFromDB();
+          if (session?.user?.id) handleGetFriendsFromDB(session?.user?.id);
         }
       });
     }
@@ -148,20 +120,7 @@ const Subslidebar = () => {
           friend: UserType;
           chat: DirectMessageChatType;
         }) => {
-          // console.log("Receive direct message request:", rs);
           if (rs?.message === "You have new direct message" && rs?.user) {
-            // const newDirectMessage = directMessages;
-            // newDirectMessage.push(rs?.user);
-
-            // const uniqueObjects = newDirectMessage?.filter(
-            //   (item, index, self) => {
-            //     return (
-            //       self.findIndex((obj) => obj.email === item.email) === index
-            //     );
-            //   }
-            // );
-
-            // updateDirectMessages(uniqueObjects);
 
             socket.emit(
               "get_direct_messages",
@@ -170,9 +129,7 @@ const Subslidebar = () => {
                 prevFriend: rs?.user,
               },
               (res: { message: string; friends: UserType[] }) => {
-                // console.log("Check get all direct messages:", res);
                 if (res?.friends) {
-                  // console.log(res?.friends);
                   updateDirectMessages(res?.friends);
                 }
               }
@@ -186,23 +143,24 @@ const Subslidebar = () => {
   }, [socket]);
 
   const handleDeleteDirectMessage = (friendEmail: string | undefined) => {
-    router.push("/dashboard/friends");
+    // TODO: Implement delete direct message
+    // router.push("/dashboard/friends");
 
-    if (socket && session?.user?.email && friendEmail !== undefined) {
-      socket.emit(
-        "delete_direct_message",
-        { ownerEmail: session?.user?.email, friendEmail: friendEmail },
-        (res: { message: string; friend: UserType }) => {
-          // console.log("Check delete direct message:", res);
-          if (
-            res.message === "Delete direct message, successfully" &&
-            res?.friend
-          ) {
-            filterDirectMessages(res?.friend);
-          }
-        }
-      );
-    }
+    // if (socket && session?.user?.email && friendEmail !== undefined) {
+    //   socket.emit(
+    //     "delete_direct_message",
+    //     { ownerEmail: session?.user?.email, friendEmail: friendEmail },
+    //     (res: { message: string; friend: UserType }) => {
+    //       // console.log("Check delete direct message:", res);
+    //       if (
+    //         res.message === "Delete direct message, successfully" &&
+    //         res?.friend
+    //       ) {
+    //         filterDirectMessages(res?.friend);
+    //       }
+    //     }
+    //   );
+    // }
   };
 
   const getDirectMessageId = (userId: string | undefined) => {
@@ -225,7 +183,7 @@ const Subslidebar = () => {
         />
       </div>
       <div className="flex flex-col gap-1 p-3">
-        {Links?.map((item) => {
+        {Channels?.map((item) => {
           return (
             <Link key={item.name} href={item.url}>
               <div
@@ -246,8 +204,7 @@ const Subslidebar = () => {
         })}
       </div>
       <div
-        className="w-[100%] mt-5 overflow-y-auto flex items-center justify-between px-6 text-[12px] dark:text-gray-400 font-bold
-                      hover:dark:text-gray-300"
+        className="w-[100%] mt-5 overflow-y-auto flex items-center justify-between px-6 text-[12px] dark:text-gray-400 font-bold hover:dark:text-gray-300"
       >
         <p>DIRECT MESSAGES</p>
         <TooltipProvider>
@@ -265,7 +222,7 @@ const Subslidebar = () => {
       </div>
       <div className="flex flex-col gap-1 px-3 mt-5">
         <div className="w-[100%] max-h-[calc(100vh-380px)] overflow-y-auto">
-          {directMessages?.map((user) => {
+          {friends?.map((user) => {
             return (
               <div
                 key={user?.id}

@@ -1,9 +1,10 @@
+import type { Metadata } from "next";
+import DMAuthProvider from "@/components/providers/DMAuthProvider";
 import Subslidebar from "@/components/Subslidebar";
 import SocketProvider from "@/components/SocketProvider";
-import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Discord Clone | Dashboard",
+  title: "Discord Clone | Direct Messages",
   description: "Developed by minhtrifit",
 };
 
@@ -13,11 +14,10 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <SocketProvider>
-      <div className="flex">
-        <Subslidebar />
-        {children}
-      </div>
-    </SocketProvider>
-  );
+  <SocketProvider>
+  <div className="flex">
+    <Subslidebar />
+    <DMAuthProvider>{children}</DMAuthProvider>
+  </div>
+</SocketProvider>)
 }
