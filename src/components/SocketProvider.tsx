@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useSocket } from "@/hooks/useSocket";
 import { useSocketStore } from "@/lib/store";
 
-import { GetSocketConnect, StartListeners } from "@/lib/socket";
-import { Socket } from "socket.io-client";
+// import { GetSocketConnect, StartListeners } from "@/lib/socket";
+// import { Socket } from "socket.io-client";
 
 type Props = {
   children?: React.ReactNode;
@@ -26,13 +26,14 @@ const SocketProvider = ({ children }: Props) => {
     socket.connect();
 
     if (session?.user) {
-      updateSocket(socket);
+      console.log("session?.user", session?.user);
+      // updateSocket(socket);
 
       // Listen event to socket
-      StartListeners(socket);
+      // StartListeners(socket);
 
       // Send event to socket
-      GetSocketConnect(socket, session?.user?.email, updateClientId);
+      // GetSocketConnect(socket, session?.user?.email, updateClientId);
 
       //   GetAllUsers(socket);
     }

@@ -1,20 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFriendStore, useSocketStore } from "@/lib/store";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { toast } from "react-toastify";
+
 import { getSummaryName } from "@/lib/helper";
-
 import { DirectMessageChatType, UserType } from "@/types";
-
 import { GrUser } from "react-icons/gr";
 import { BsSpeedometer } from "react-icons/bs";
 import { AiOutlineShop } from "react-icons/ai";
 import { IoMdAdd } from "react-icons/io";
 import { MdClear } from "react-icons/md";
-
 import UserProfile from "./UserProfile";
 import {
   Tooltip,
@@ -23,34 +21,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { joinChannel } from "@/lib/redux/features/socketSlice"
 import { fetchFriends } from "@/lib/redux/features/friendSlice";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hook";
 import { RootState } from "@/lib/redux/store";
+import { getConnectChannels } from "@/utils/actions/channel";
 
 const Subslidebar = () => {
   const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const dispatch = useAppDispatch();
   const friends = useAppSelector((state: RootState) => state.friend.friends);
   const router = useRouter();
+  const params = useParams<{id: string}>();
+  const channelId = params.id
   const category = usePathname().split("/dashboard/")[1]; 
+  const [channels, setChannels] = useState<any[]>([])
 
-  const Channels = [
-    {
-      name: "Friends",
-      url: "/dashboard/friends",
-      icon: <GrUser size={25} />,
-    },
-    {
-      name: "Nitro",
-      url: "/dashboard/nitro",
-      icon: <BsSpeedometer size={25} />,
-    },
-    {
-      name: "Shop",
-      url: "/dashboard/shop",
-      icon: <AiOutlineShop size={25} />,
-    },
-  ];
 
   const socket = useSocketStore((state) => {
     return state.socket;
@@ -59,30 +45,53 @@ const Subslidebar = () => {
   const setPendings = useFriendStore((state) => {
     return state.setPendings;
   });
+/** --------------------EVENT HANDLER-------------------- */
+
+  // const updateDirectMessages = useFriendStore((state) => {
+  //   return state.updateDirectMessages;
+  // });
 
 
-  const updateDirectMessages = useFriendStore((state) => {
-    return state.updateDirectMessages;
-  });
-
-  const filterDirectMessages = useFriendStore((state) => {
-    return state.filterDirectMessages;
-  });
+  const handleGetChannels = async () => {
+    try {
+      const data = await getConnectChannels();
+      console.log("TEST", data);
+      setChannels(
+        data.map((item : any) => (
+          {
+            ...item,
+          })));
+    } catch {
+      setChannels([]);
+    }
+  }
 
   const handleGetFriendsFromDB = async (userId: string) => {
     dispatch(fetchFriends(userId));
   };
 
+  const handleJoinChannel = async (id: string) => {
+    if (id != channelId) {
+      dispatch(joinChannel({channelId: id, username: session.user.name, clientId: session.user.id}));
+  
+      router.push(`/messages/${id}`);
+    }
+  }
+
+  useEffect(() => {
+    handleGetChannels();
+  }, [])
+
   useEffect(() => {
     if (socket) {
-      socket.on(
-        "get_friend_request",
-        (rs: { message: string; user: UserType }) => {
-          const { user }: any = rs;
+      // socket.on(
+      //   "get_friend_request",
+      //   (rs: { message: string; user: UserType }) => {
+      //     const { user }: any = rs;
 
-          setPendings(user);
-        }
-      );
+      //     setPendings(user);
+      //   }
+      // );
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,13 +106,13 @@ const Subslidebar = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.on("new_friend", (rs: { message: string; user: UserType }) => {
-        if (rs?.message === "You have a new friend") {
-          toast.info(`You and ${rs?.user?.email} just become a friend`);
+      // socket.on("new_friend", (rs: { message: string; user: UserType }) => {
+      //   if (rs?.message === "You have a new friend") {
+      //     toast.info(`You and ${rs?.user?.email} just become a friend`);
 
-          if (session?.user?.id) handleGetFriendsFromDB(session?.user?.id);
-        }
-      });
+      //     if (session?.user?.id) handleGetFriendsFromDB(session?.user?.id);
+      //   }
+      // });
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,31 +121,31 @@ const Subslidebar = () => {
   // Receive direct message
   useEffect(() => {
     if (socket) {
-      socket.on(
-        "receive_direct_message",
-        (rs: {
-          message: string;
-          user: UserType;
-          friend: UserType;
-          chat: DirectMessageChatType;
-        }) => {
-          if (rs?.message === "You have new direct message" && rs?.user) {
+      // socket.on(
+      //   "receive_direct_message",
+      //   (rs: {
+      //     message: string;
+      //     user: UserType;
+      //     friend: UserType;
+      //     chat: DirectMessageChatType;
+      //   }) => {
+          // if (rs?.message === "You have new direct message" && rs?.user) {
 
-            socket.emit(
-              "get_direct_messages",
-              {
-                email: session?.user?.email,
-                prevFriend: rs?.user,
-              },
-              (res: { message: string; friends: UserType[] }) => {
-                if (res?.friends) {
-                  updateDirectMessages(res?.friends);
-                }
-              }
-            );
-          }
-        }
-      );
+          //   socket.emit(
+          //     "get_direct_messages",
+          //     {
+          //       email: session?.user?.email,
+          //       prevFriend: rs?.user,
+          //     },
+          //     (res: { message: string; friends: UserType[] }) => {
+          //       if (res?.friends) {
+          //         updateDirectMessages(res?.friends);
+          //       }
+          //     }
+          //   );
+          // }
+      //   }
+      // );
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,13 +173,14 @@ const Subslidebar = () => {
   };
 
   const getDirectMessageId = (userId: string | undefined) => {
-    const arr = category.split("/");
-    if (userId !== undefined && arr?.length && arr?.length === 3) {
-      const id = arr[arr?.length - 1];
-      if (userId === id) return true;
-      return false;
-    }
-    return false;
+    // const arr = category.split("/");
+    // if (userId !== undefined && arr?.length && arr?.length === 3) {
+    //   const id = arr[arr?.length - 1];
+    //   if (userId === id) return true;
+    //   return false;
+    // }
+    // return false;
+    return true;
   };
 
   return (
@@ -183,10 +193,12 @@ const Subslidebar = () => {
         />
       </div>
       <div className="flex flex-col gap-1 p-3">
-        {Channels?.map((item) => {
+        {channels?.map((item) => {
           return (
-            <Link key={item.name} href={item.url}>
+            // <Link key={item.name} href={item.url}>
               <div
+              key={item.name}
+              onClick={() => handleJoinChannel(item.id)}
                 className={`px-2 py-3 rounded-md text-[14px] flex items-center gap-5
                             text-zinc-500 hover:bg-zinc-300 hover:text-primary-black
                             dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${
@@ -196,10 +208,10 @@ const Subslidebar = () => {
                               "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
                             }`}
               >
-                {item.icon}
+                <AiOutlineShop size={25} />
                 <p>{item.name}</p>
               </div>
-            </Link>
+            // </Link>
           );
         })}
       </div>

@@ -1,5 +1,5 @@
 import Slidebar from "@/components/Slidebar";
-import SocketProvider from "@/components/SocketProvider";
+// import SocketProvider from "@/components/SocketProvider";
 import ScreenProvider from "@/components/providers/ScreenProvider";
 import ServerMemberSlidebar from "@/components/server/ServerMemberSlidebar";
 import ServerSubSlidebar from "@/components/server/ServerSubSlidebar";
@@ -19,7 +19,7 @@ export default function Layout({
     <ScreenProvider>
     <div className="dark:bg-secondary-gray flex h-screen max-h-screen">
       <Slidebar />
-      <SocketProvider>
+      {/* <SocketProvider> */}
       <div className="dark:bg-secondary-gray flex h-screen max-h-screen">
         <ServerSubSlidebar />
         <div className="w-[calc(100vw-320px)] flex overflow-y-auto">
@@ -31,7 +31,7 @@ export default function Layout({
           </div>
         </div>
       </div>
-    </SocketProvider>
+    {/* </SocketProvider> */}
     </div>
   </ScreenProvider>
 
