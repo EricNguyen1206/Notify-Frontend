@@ -69,53 +69,7 @@ const UserProfile = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={`relative dark:hover:text-white p-[6px] rounded-md
-                        hover:bg-secondary-white hover:text-primary-gray
-                        dark:hover:bg-secondary-gray ${
-                          session?.user?.mute && "text-red-500"
-                        }`}
-                    onClick={updateMuteSession}
-                  >
-                    {session?.user?.mute && (
-                      <div className="absolute left-0 right-0 mx-auto top-[18px] -rotate-[40deg] w-[30px] h-[2px] bg-red-500"></div>
-                    )}
-                    <FaMicrophone size={20} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>{session?.user?.mute ? "unmute" : "mute"}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={`relative dark:hover:text-white p-[6px] rounded-md
-                        hover:bg-secondary-white hover:text-primary-gray
-                        dark:hover:bg-secondary-gray ${
-                          session?.user?.deafen && "text-red-500"
-                        }`}
-                    onClick={updateDeafenSession}
-                  >
-                    {session?.user?.deafen && (
-                      <div className="absolute left-0 right-0 mx-auto top-[18px] -rotate-[40deg] w-[30px] h-[2px] bg-red-500"></div>
-                    )}
-                    <IoHeadsetSharp size={20} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>{session?.user?.deafen ? "undeafen" : "deafen"}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
+          <div className="flex flex-1 justify-end">
             <UserSettingDialog>
               <TooltipProvider>
                 <Tooltip>

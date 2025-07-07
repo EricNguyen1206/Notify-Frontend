@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export const getConnectServer = async () => {
   try {
-    const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}`);
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api`);
     return res.data;
   } catch (err: any) {
     console.log("API CALL ERROR:", err?.response?.data);
@@ -17,7 +17,7 @@ export const getConnectServer = async () => {
 export const getUserByEmail = async (email: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/user/email/${email}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/user/email/${email}`
     );
     return res.data;
   } catch (err: any) {
@@ -29,7 +29,7 @@ export const getUserByEmail = async (email: string) => {
 export const createNewUser = async (user: UserType) => {
   try {
     const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/users/register`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/users/register`,
       {
         name: user.name,
         email: user.email,
@@ -72,11 +72,11 @@ export const loginByEmail = async (user: UserType) => {
 export const createNewServer = async (server: ServerType, pathName: string) => {
   try {
     const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/server/create`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/server/create`,
       {
         name: server.name,
-        owner: server.owner,
-        avatar: server.avatar,
+        owner: server.ownerId,
+        avatar: server.icon,
       }
     );
 
@@ -92,7 +92,7 @@ export const createNewServer = async (server: ServerType, pathName: string) => {
 export const getJoinServerByUserId = async (userId: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/server/join/server/${userId}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/server/join/server/${userId}`
     );
     return res.data;
   } catch (err: any) {
@@ -104,7 +104,7 @@ export const getJoinServerByUserId = async (userId: string) => {
 export const editUserByUserId = async (user: UserType) => {
   try {
     const res = await axios.put(
-      `${process.env.NEXT_PUBLIC_API_URL}/user/update/${user.id}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/user/update/${user.id}`,
       {
         id: user.id,
         ...user,
@@ -121,7 +121,7 @@ export const editUserByUserId = async (user: UserType) => {
 export const getPendingByEmail = async (email: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/user/pending/${email}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/user/pending/${email}`
     );
     return res.data;
   } catch (err: any) {
@@ -133,7 +133,7 @@ export const getPendingByEmail = async (email: string) => {
 export const getAllFriendsByEmail = async (email: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/user/friends/${email}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/user/friends/${email}`
     );
     return res.data;
   } catch (err: any) {
@@ -145,7 +145,7 @@ export const getAllFriendsByEmail = async (email: string) => {
 export const getAllDirectMessagesByEmail = async (email: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/user/directmessages/${email}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/user/directmessages/${email}`
     );
     return res.data;
   } catch (err: any) {
@@ -157,7 +157,7 @@ export const getAllDirectMessagesByEmail = async (email: string) => {
 export const getUserById = async (id: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/user/id/${id}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/user/id/${id}`
     );
     return res.data;
   } catch (err: any) {
@@ -169,7 +169,7 @@ export const getUserById = async (id: string) => {
 export const getAllChatsByUserId = async (userId: string, friendId: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/message/direct`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/message/direct`,
       {
         data: {
           userId: userId,
@@ -188,7 +188,7 @@ export const getAllChatsByUserId = async (userId: string, friendId: string) => {
 export const getDetailServerById = async (serverId: string, userId: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/server/detail/${serverId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/server/detail/${serverId}`,
       {
         headers: {
           userId: userId,
@@ -209,7 +209,7 @@ export const getAllChatsByChannelId = async (
 ) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/server/channel/chat/${channelId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/server/channel/chat/${channelId}`,
       {
         headers: {
           userId: userId,
@@ -227,7 +227,7 @@ export const getAllChatsByChannelId = async (
 export const getChannelById = async (userId: string, channelId: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/server/channel/${channelId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/server/channel/${channelId}`,
       {
         headers: {
           userId: userId,
@@ -245,7 +245,7 @@ export const getChannelById = async (userId: string, channelId: string) => {
 export const getServerInviteLink = async (userId: string, serverId: string) => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/server/invite/${serverId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/server/invite/${serverId}`,
       {
         headers: {
           userId: userId,
@@ -266,7 +266,7 @@ export const joinServerByInviteLink = async (
 ) => {
   try {
     const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/server/invite`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/server/invite`,
       { userId: userId, inviteLink: inviteLink },
       {
         headers: {
@@ -285,7 +285,7 @@ export const joinServerByInviteLink = async (
 export const adminGetAllUsers = async () => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/admin/users`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`
     );
     return res.data;
   } catch (err: any) {
@@ -297,7 +297,7 @@ export const adminGetAllUsers = async () => {
 export const adminGetAllServers = async () => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/admin/servers`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/admin/servers`
     );
     return res.data;
   } catch (err: any) {
@@ -309,7 +309,7 @@ export const adminGetAllServers = async () => {
 export const adminGetServersAnalysis = async () => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/admin/servers/analysis`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/admin/servers/analysis`
     );
     return res.data;
   } catch (err: any) {
@@ -321,7 +321,7 @@ export const adminGetServersAnalysis = async () => {
 export const adminGetAllChats = async () => {
   try {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/admin/chats`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/admin/chats`
     );
     return res.data;
   } catch (err: any) {

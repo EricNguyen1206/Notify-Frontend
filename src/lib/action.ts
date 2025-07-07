@@ -12,12 +12,6 @@ export const handleRegister = async (prevState: any, form: FormData) => {
 
     if (agree === undefined) return { error: "Please agree terms & policy" };
 
-    // const res = await getUserByEmail(email);
-    // const { user } = res;
-    // console.log("TEST", user);
-
-    // if (user !== null) return { error: "Email is already exist" };
-
     if (adminCode !== "" && adminCode !== process.env.NEXT_ADMIN_CODE)
       return { error: "Admin code incorrect" };
 

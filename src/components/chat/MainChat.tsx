@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useFriendStore, useSocketStore } from "@/lib/store";
 import { v4 as uuidv4 } from "uuid";
 import { saveAs } from "file-saver";
@@ -36,6 +36,7 @@ import { getAllChatsByUserId, getUserById } from "@/utils/actions/api";
 import { formatDateStr, getSummaryName } from "@/lib/helper";
 import { ApplicationFileType } from "@/lib/utils";
 import { handleFileExtUpload, handleFileUpload } from "@/utils/supabase";
+import { useAppSelector } from "@/lib/redux/hook";
 
 export interface FormDataState {
   message: string;
@@ -44,8 +45,11 @@ export interface FormDataState {
 const MainChat = () => {
   const params = useParams();
   const pathName = usePathname();
+  const user = useAppSelector(state => state.auth.user);
+  const conn = useAppSelector(state => state.socket.ws)
+  const router = useRouter();
   // const { data: session }: any = useSession();
-  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
+  const session = {user: user}
 
   const [friend, setFriend] = useState<UserType | null>(null);
   const [formData, setFormData] = useState<FormDataState>({
@@ -59,6 +63,8 @@ const MainChat = () => {
   const [fileName, setFileName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [chatsLoading, setChatsLoading] = useState<boolean>(false);
+
+  const [users, setUsers] = useState<Array<{ username: string }>>([])
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chatBoxRef = useRef<HTMLDivElement>(null);
@@ -181,108 +187,152 @@ const MainChat = () => {
       setIsOverFlow(false);
   }, [chats, screenHeight]);
 
-  // Receive direct message
   useEffect(() => {
-    if (socket) {
-      socket.on(
-        "receive_direct_message",
-        (rs: {
-          message: string;
-          user: UserType;
-          chat: DirectMessageChatType;
-        }) => {
-          // console.log("Receive direct message request:", rs);
-          if (
-            rs?.message === "You have new direct message" &&
-            rs?.chat &&
-            rs?.user
-          ) {
-            socket.emit(
-              "get_all_chats",
-              {
-                userId: session?.user?.id,
-                friendId: rs?.user?.id,
-              },
-              (res: {
-                message: string;
-                user: UserType;
-                friend: UserType;
-                chats: DirectMessageChatType[];
-              }) => {
-                // console.log("Check get all chats:", res);
-                if (res?.chats) updateChats(res?.chats);
-              }
-            );
-          }
-        }
-      );
+    // if (textarea.current) {
+    //   autosize(textarea.current)
+    // }
+
+    if (conn === null) {
+      router.push('/messages')
+      return
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
+    conn.onmessage = (message) => {
+      const m: Message = JSON.parse(message.data)
+      if (m.content == 'A new user has joined the room') {
+        setUsers([...users, { username: m.username }])
+      }
+
+      if (m.content == 'user left the chat') {
+        const deleteUser = users.filter((user) => user.username != m.username)
+        setUsers([...deleteUser])
+        setMessage([...messages, m])
+        return
+      }
+
+      user?.username == m.username ? (m.type = 'self') : (m.type = 'recv')
+      setMessage([...messages, m])
+    }
+
+    conn.onclose = () => {}
+    conn.onerror = () => {}
+    conn.onopen = () => {}
+  }, [textarea, messages, conn, session.user])
+
+  const sendMessage = () => {
+    // if (!textarea.current?.value) return
+    if (formData?.message == "") return
+    if (conn === null) {
+      router.push('/')
+      return
+    }
+
+    conn.send(formData?.message)
+    formData?.message = ""
+  }
+
+  // Receive direct message
+  // useEffect(() => {
+  //   if (socket) {
+  //     socket.on(
+  //       "receive_direct_message",
+  //       (rs: {
+  //         message: string;
+  //         user: UserType;
+  //         chat: DirectMessageChatType;
+  //       }) => {
+  //         // console.log("Receive direct message request:", rs);
+  //         if (
+  //           rs?.message === "You have new direct message" &&
+  //           rs?.chat &&
+  //           rs?.user
+  //         ) {
+  //           socket.emit(
+  //             "get_all_chats",
+  //             {
+  //               userId: session?.user?.id,
+  //               friendId: rs?.user?.id,
+  //             },
+  //             (res: {
+  //               message: string;
+  //               user: UserType;
+  //               friend: UserType;
+  //               chats: DirectMessageChatType[];
+  //             }) => {
+  //               // console.log("Check get all chats:", res);
+  //               if (res?.chats) updateChats(res?.chats);
+  //             }
+  //           );
+  //         }
+  //       }
+  //     );
+  //   }
+
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [socket]);
 
   // Get direct chat delete
-  useEffect(() => {
-    if (socket) {
-      socket.on(
-        "get_chat_delete",
-        (rs: {
-          message: string;
-          status: boolean;
-          userId: string;
-          friendId: string;
-        }) => {
-          // Send notification with friend client
-          if (session?.user?.id === rs?.friendId && rs?.status === true) {
-            // toast.warn(rs?.message);
-            setMessage(rs?.message);
-            setNoti(true);
-          }
+  // useEffect(() => {
+  //   if (socket) {
+  //     socket.on(
+  //       "get_chat_delete",
+  //       (rs: {
+  //         message: string;
+  //         status: boolean;
+  //         userId: string;
+  //         friendId: string;
+  //       }) => {
+  //         // Send notification with friend client
+  //         if (session?.user?.id === rs?.friendId && rs?.status === true) {
+  //           // toast.warn(rs?.message);
+  //           setMessage(rs?.message);
+  //           setNoti(true);
+  //         }
 
-          // Update new chat with all user client
-          if (rs?.status === true && session?.user?.id === rs?.userId) {
-            socket.emit(
-              "get_all_chats",
-              {
-                userId: session?.user?.id,
-                friendId: rs?.friendId,
-              },
-              (res: {
-                message: string;
-                user: UserType;
-                friend: UserType;
-                chats: DirectMessageChatType[];
-              }) => {
-                if (res?.chats) updateChats(res?.chats);
-              }
-            );
-          }
+  //         // Update new chat with all user client
+  //         if (rs?.status === true && session?.user?.id === rs?.userId) {
+  //           socket.emit(
+  //             "get_all_chats",
+  //             {
+  //               userId: session?.user?.id,
+  //               friendId: rs?.friendId,
+  //             },
+  //             (res: {
+  //               message: string;
+  //               user: UserType;
+  //               friend: UserType;
+  //               chats: DirectMessageChatType[];
+  //             }) => {
+  //               if (res?.chats) updateChats(res?.chats);
+  //             }
+  //           );
+  //         }
 
-          // Update new chat with all friend client
-          if (rs?.status === true && session?.user?.id === rs?.friendId) {
-            const friendId = params?.id[0];
+  //         // Update new chat with all friend client
+  //         if (rs?.status === true && session?.user?.id === rs?.friendId) {
+  //           const friendId = params?.id[0];
 
-            socket.emit(
-              "get_all_chats",
-              {
-                userId: session?.user?.id,
-                friendId: friendId,
-              },
-              (res: {
-                message: string;
-                user: UserType;
-                friend: UserType;
-                chats: DirectMessageChatType[];
-              }) => {
-                if (res?.chats) updateChats(res?.chats);
-              }
-            );
-          }
-        }
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket, pathName]);
+  //           socket.emit(
+  //             "get_all_chats",
+  //             {
+  //               userId: session?.user?.id,
+  //               friendId: friendId,
+  //             },
+  //             (res: {
+  //               message: string;
+  //               user: UserType;
+  //               friend: UserType;
+  //               chats: DirectMessageChatType[];
+  //             }) => {
+  //               if (res?.chats) updateChats(res?.chats);
+  //             }
+  //           );
+  //         }
+  //       }
+  //     );
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [socket, pathName]);
 
   useEffect(() => {
     if (noti) {
@@ -630,7 +680,7 @@ const MainChat = () => {
               return (
                 <TextChat
                   key={uuidv4()}
-                  userIdSession={session?.user?.id}
+                  userIdSession={session?.user?.id ?? ""}
                   user={
                     chat?.userId === session?.user?.id ? session?.user : friend
                   }
@@ -646,7 +696,7 @@ const MainChat = () => {
               return (
                 <ImageChat
                   key={uuidv4()}
-                  userIdSession={session?.user?.id}
+                  userIdSession={session?.user?.id ?? ""}
                   user={
                     chat?.userId === session?.user?.id ? session?.user : friend
                   }
@@ -663,7 +713,7 @@ const MainChat = () => {
               return (
                 <FileChat
                   key={uuidv4()}
-                  userIdSession={session?.user?.id}
+                  userIdSession={session?.user?.id ?? ""}
                   user={
                     chat?.userId === session?.user?.id ? session?.user : friend
                   }

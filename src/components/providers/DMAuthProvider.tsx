@@ -29,25 +29,25 @@ const DMAuthProvider = ({ children }: Props) => {
   };
 
   useEffect(() => {
-    if (!session?.user || directMessages?.length === 0) {
-      router.push("/dashboard/friends");
-    }
+    // if (!session?.user || directMessages?.length === 0) {
+    //   router.push("/dashboard/friends");
+    // }
 
-    if (session?.user || directMessages?.length !== 0) {
-      const friendId = pathName.split("/dashboard/friends/messages/")[1];
+    // if (session?.user || directMessages?.length !== 0) {
+    //   const friendId = pathName.split("/dashboard/friends/messages/")[1];
 
-      if (friendId !== undefined) {
-        const checkExist = directMessages?.filter((user) => {
-          return user.id === friendId;
-        });
+    //   if (friendId !== undefined) {
+    //     const checkExist = directMessages?.filter((user) => {
+    //       return user.id === friendId;
+    //     });
 
-        if (checkExist?.length === 0) {
-          router.push("/dashboard/friends");
-          if (session?.user?.email)
-            handleGetDirectMessagesFromDB(session?.user?.email);
-        }
-      }
-    }
+    //     if (checkExist?.length === 0) {
+    //       router.push("/dashboard/friends");
+    //       if (session?.user?.email)
+    //         handleGetDirectMessagesFromDB(session?.user?.email);
+    //     }
+    //   }
+    // }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, directMessages, router]);
 
