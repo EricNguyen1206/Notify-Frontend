@@ -7,12 +7,17 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import { useFriendStore, useSocketStore } from "@/lib/store";
+import { useParams, usePathname } from "next/navigation";
+import { useServerStore, useSocketStore } from "@/lib/store";
 import { v4 as uuidv4 } from "uuid";
 import { saveAs } from "file-saver";
+import { toast } from "react-toastify";
 
-import { DirectMessageChatType, UserType } from "@/types";
+import {
+  ChannelMessageChatType,
+  DirectMessageChatType,
+  UserType,
+} from "@/types";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -22,40 +27,36 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
+import ServerChatInput from "./ChannelChatInput";
+import TextChat from "../chat/TextChat";
+import ImageChat from "../chat/ImageChat";
+import FileChat from "../chat/FileChat";
 
-import TextChat from "./TextChat";
-import ChatInput from "./ChatInput";
-import ImageChat from "./ImageChat";
-import FileChat from "./FileChat";
+import { IoMdNotifications } from "react-icons/io";
 
-import { PiPhoneCallFill } from "react-icons/pi";
-import { FaCircleUser } from "react-icons/fa6";
-import { toast } from "react-toastify";
-
-import { getAllChatsByUserId, getUserById } from "@/utils/actions/api";
+import {
+  getAllChatsByChannelId,
+  getChannelById,
+  getDetailServerById,
+  getUserById,
+} from "@/utils/actions/api";
 import { formatDateStr, getSummaryName } from "@/lib/helper";
 import { ApplicationFileType } from "@/lib/utils";
 import { handleFileExtUpload, handleFileUpload } from "@/utils/supabase";
-import { useAppSelector } from "@/lib/redux/hook";
 
 export interface FormDataState {
   message: string;
 }
 
-const MainChat = () => {
+const ChannelMainChat = () => {
   const params = useParams();
   const pathName = usePathname();
-  const user = useAppSelector(state => state.auth.user);
-  const conn = useAppSelector(state => state.socket.ws)
-  const router = useRouter();
   // const { data: session }: any = useSession();
-  const session = {user: user}
-
-  const [friend, setFriend] = useState<UserType | null>(null);
+  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
   const [formData, setFormData] = useState<FormDataState>({
     message: "",
   });
-  const [screenHeight, setScreenHeight] = useState(window.innerHeight);
+  const [screenHeight, setScreenHeight] = useState<any>(null);
   const [isOverFlow, setIsOverFlow] = useState<boolean>(false);
   const [noti, setNoti] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
@@ -63,8 +64,6 @@ const MainChat = () => {
   const [fileName, setFileName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [chatsLoading, setChatsLoading] = useState<boolean>(false);
-
-  const [users, setUsers] = useState<Array<{ username: string }>>([])
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chatBoxRef = useRef<HTMLDivElement>(null);
@@ -75,55 +74,88 @@ const MainChat = () => {
     return state.socket;
   });
 
-  const chats = useFriendStore((state) => {
-    return state.chats;
+  const server = useServerStore((state) => {
+    return state.server;
   });
 
-  const setChats = useFriendStore((state) => {
-    return state.setChats;
+  const setServer = useServerStore((state) => {
+    return state.setServer;
   });
 
-  const updateChats = useFriendStore((state) => {
-    return state.updateChats;
+  const channel = useServerStore((state) => {
+    return state.channel;
   });
 
-  const userProfileToggle = useFriendStore((state) => {
-    return state.userProfileToggle;
+  const setChannel = useServerStore((state) => {
+    return state.setChannel;
   });
 
-  const setUserProfileToggle = useFriendStore((state) => {
-    return state.setUserProfileToggle;
+  const channelChats = useServerStore((state) => {
+    return state.channelChats;
   });
 
-  const handleGetFriendProfile = async () => {
-    const friendId = params?.id[0];
+  const setChannelChats = useServerStore((state) => {
+    return state.setChannelChats;
+  });
 
-    if (friendId !== undefined) {
-      const res = await getUserById(friendId);
-      if (res?.message === "Find user sucessfully") setFriend(res?.user);
+  const updateChannelChats = useServerStore((state) => {
+    return state.updateChannelChats;
+  });
+
+  const handleGetDetailServer = async () => {
+    if (params?.id && typeof params?.id === "string" && session?.user?.id) {
+      setLoading(true);
+      const res = await getDetailServerById(params?.id, session?.user?.id);
+
+      if (
+        res?.message === "Get detail server successfully" &&
+        res?.server !== null
+      ) {
+        setServer(res?.server);
+      }
+
+      setLoading(false);
+    }
+  };
+
+  const handleGetChannelProfile = async () => {
+    const channelId = params?.["channel-id"];
+
+    if (
+      session?.user?.id &&
+      channelId !== undefined &&
+      typeof channelId === "string"
+    ) {
+      const res = await getChannelById(session?.user?.id, channelId);
+      if (res?.message === "Get channel by id successfully") {
+        setChannel(res?.channel);
+      }
     }
   };
 
   const handleGetAllChats = async () => {
-    const friendId = params?.id[0];
+    const channelId = params?.["channel-id"];
 
-    if (session?.user?.id && friendId !== undefined) {
+    if (
+      session?.user?.id &&
+      channelId !== undefined &&
+      typeof channelId === "string"
+    ) {
       setChatsLoading(true);
-      const res = await getAllChatsByUserId(session?.user?.id, friendId);
-
-      if (res?.message === "Get all direct messages successfully") {
-        updateChats(res?.chats);
+      const res = await getAllChatsByChannelId(session?.user?.id, channelId);
+      if (res?.message === "Get all chats by channel id successfully") {
+        updateChannelChats(res?.chats);
       }
-
       setChatsLoading(false);
     }
   };
 
   useEffect(() => {
-    handleGetFriendProfile();
+    handleGetDetailServer();
+    handleGetChannelProfile();
     handleGetAllChats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session]);
 
   // Check screen height
   useEffect(() => {
@@ -155,8 +187,8 @@ const MainChat = () => {
 
   // Chat auto scroll effect
   useEffect(() => {
-    if (chats !== undefined) {
-      if (chats?.length) {
+    if (channelChats !== undefined) {
+      if (channelChats?.length) {
         containerRef.current?.scrollIntoView({
           behavior: "smooth",
           block: "start",
@@ -169,11 +201,11 @@ const MainChat = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chats?.length]);
+  }, [channelChats?.length]);
 
   useEffect(() => {
     mainRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chats]);
+  }, [channelChats]);
 
   useEffect(() => {
     mainRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -185,201 +217,91 @@ const MainChat = () => {
       chatBoxRef?.current?.clientHeight < screenHeight - 210
     )
       setIsOverFlow(false);
-  }, [chats, screenHeight]);
+  }, [channelChats, screenHeight, params]);
 
   useEffect(() => {
-    // if (textarea.current) {
-    //   autosize(textarea.current)
-    // }
-
-    if (conn === null) {
-      router.push('/messages')
-      return
-    }
-
-    conn.onmessage = (message) => {
-      const m: Message = JSON.parse(message.data)
-      if (m.content == 'A new user has joined the room') {
-        setUsers([...users, { username: m.username }])
-      }
-
-      if (m.content == 'user left the chat') {
-        const deleteUser = users.filter((user) => user.username != m.username)
-        setUsers([...deleteUser])
-        setMessage([...messages, m])
-        return
-      }
-
-      user?.username == m.username ? (m.type = 'self') : (m.type = 'recv')
-      setMessage([...messages, m])
-    }
-
-    conn.onclose = () => {}
-    conn.onerror = () => {}
-    conn.onopen = () => {}
-  }, [textarea, messages, conn, session.user])
-
-  const sendMessage = () => {
-    // if (!textarea.current?.value) return
-    if (formData?.message == "") return
-    if (conn === null) {
-      router.push('/')
-      return
-    }
-
-    conn.send(formData?.message)
-    formData?.message = ""
-  }
+    setIsOverFlow(false);
+  }, []);
 
   // Receive direct message
-  // useEffect(() => {
-  //   if (socket) {
-  //     socket.on(
-  //       "receive_direct_message",
-  //       (rs: {
-  //         message: string;
-  //         user: UserType;
-  //         chat: DirectMessageChatType;
-  //       }) => {
-  //         // console.log("Receive direct message request:", rs);
-  //         if (
-  //           rs?.message === "You have new direct message" &&
-  //           rs?.chat &&
-  //           rs?.user
-  //         ) {
-  //           socket.emit(
-  //             "get_all_chats",
-  //             {
-  //               userId: session?.user?.id,
-  //               friendId: rs?.user?.id,
-  //             },
-  //             (res: {
-  //               message: string;
-  //               user: UserType;
-  //               friend: UserType;
-  //               chats: DirectMessageChatType[];
-  //             }) => {
-  //               // console.log("Check get all chats:", res);
-  //               if (res?.chats) updateChats(res?.chats);
-  //             }
-  //           );
-  //         }
-  //       }
-  //     );
-  //   }
-
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [socket]);
-
-  // Get direct chat delete
-  // useEffect(() => {
-  //   if (socket) {
-  //     socket.on(
-  //       "get_chat_delete",
-  //       (rs: {
-  //         message: string;
-  //         status: boolean;
-  //         userId: string;
-  //         friendId: string;
-  //       }) => {
-  //         // Send notification with friend client
-  //         if (session?.user?.id === rs?.friendId && rs?.status === true) {
-  //           // toast.warn(rs?.message);
-  //           setMessage(rs?.message);
-  //           setNoti(true);
-  //         }
-
-  //         // Update new chat with all user client
-  //         if (rs?.status === true && session?.user?.id === rs?.userId) {
-  //           socket.emit(
-  //             "get_all_chats",
-  //             {
-  //               userId: session?.user?.id,
-  //               friendId: rs?.friendId,
-  //             },
-  //             (res: {
-  //               message: string;
-  //               user: UserType;
-  //               friend: UserType;
-  //               chats: DirectMessageChatType[];
-  //             }) => {
-  //               if (res?.chats) updateChats(res?.chats);
-  //             }
-  //           );
-  //         }
-
-  //         // Update new chat with all friend client
-  //         if (rs?.status === true && session?.user?.id === rs?.friendId) {
-  //           const friendId = params?.id[0];
-
-  //           socket.emit(
-  //             "get_all_chats",
-  //             {
-  //               userId: session?.user?.id,
-  //               friendId: friendId,
-  //             },
-  //             (res: {
-  //               message: string;
-  //               user: UserType;
-  //               friend: UserType;
-  //               chats: DirectMessageChatType[];
-  //             }) => {
-  //               if (res?.chats) updateChats(res?.chats);
-  //             }
-  //           );
-  //         }
-  //       }
-  //     );
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [socket, pathName]);
-
   useEffect(() => {
-    if (noti) {
-      toast.warn(message);
-      setMessage("");
-      setNoti(false);
+    if (socket) {
+      socket.on(
+        "receive_channel_message",
+        (rs: {
+          message: string;
+          user: UserType;
+          chats: ChannelMessageChatType;
+        }) => {
+          // console.log("Receive channel message request:", rs);
+
+          const serverId = params?.["id"];
+          const channelId = params?.["channel-id"];
+          // const serverId = server?.id;
+          // const channelId = channel?.id;
+
+          if (
+            rs?.message === "You have new channel message" &&
+            rs?.chats &&
+            rs?.user &&
+            serverId &&
+            channelId
+          ) {
+            socket.emit(
+              "get_all_channel_chats",
+              {
+                userId: session?.user?.id,
+                serverId: serverId,
+                channelId: channelId,
+              },
+              (res: { message: string; chats: ChannelMessageChatType[] }) => {
+                // console.log("Check get all channel chats:", res);
+                if (res?.chats) updateChannelChats(res?.chats);
+              }
+            );
+          }
+        }
+      );
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noti]);
+  }, [socket]);
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const serverId = params?.id;
+    const channelId = params?.["channel-id"];
 
     if (formData?.message === "") {
       toast.error("Message can not be empty");
       return;
     }
 
-    if (!friend) {
-      toast.error("Friend not found");
-      return;
-    }
-
     if (
       socket &&
       session?.user?.id &&
-      formData?.message !== "" &&
-      fileName === ""
+      serverId !== "" &&
+      channelId !== "" &&
+      formData?.message !== ""
     ) {
       socket.emit(
-        "send_direct_message",
+        "send_channel_message",
         {
           userId: session?.user?.id,
-          friendId: friend?.id,
+          serverId: serverId,
+          channelId: channelId,
           provider: "text",
           text: formData.message,
         },
         (res: {
           message: string;
           user: UserType;
-          friend: UserType;
-          chat: DirectMessageChatType;
+          chat: ChannelMessageChatType;
         }) => {
-          // console.log("Check send direct message:", res);
-          if (res?.chat) {
-            // console.log("SEND CHAT", res?.chat);
-            setChats(res?.chat);
+          if (res?.message === "Send channel message successfully") {
+            const newChat = { ...res?.chat, user: res?.user };
+            setChannelChats(newChat);
           }
         }
       );
@@ -388,44 +310,43 @@ const MainChat = () => {
         message: "",
       });
     }
-
-    // setFormData({
-    //   message: "",
-    // });
   };
 
   const handleDeleteChatById = (chatId: string) => {
+    const serverId = params?.id;
+    const channelId = params?.["channel-id"];
+
     if (
       confirm("Do you want to delete this chat?") == true &&
       socket &&
-      session?.user &&
-      friend
+      session?.user
     ) {
       socket.emit(
-        "delete_chat_by_id",
+        "delete_channel_chat_by_id",
         {
           chatId: chatId,
           userId: session?.user?.id,
-          friendId: friend?.id,
+          serverId: serverId,
+          channelId: channelId,
         },
         (res: { message: string; status: boolean }) => {
           // console.log("Check delete chat by id:", res);
           if (res?.status === true) {
             toast.success(res?.message);
             socket.emit(
-              "get_all_chats",
+              "get_all_channel_chats",
               {
                 userId: session?.user?.id,
-                friendId: friend?.id,
+                serverId: serverId,
+                channelId: channelId,
               },
               (res: {
                 message: string;
                 user: UserType;
-                friend: UserType;
                 chats: DirectMessageChatType[];
               }) => {
                 if (res?.chats) {
-                  updateChats(res?.chats);
+                  console.log("GET ALL CHAT AFTER DELETE", res?.chats);
                 }
               }
             );
@@ -457,6 +378,8 @@ const MainChat = () => {
     const ext = file?.name?.split(".")[1];
     const fileDbName = file?.name;
     // const format = file?.type?.split("/")[1];
+    const serverId = params?.id;
+    const channelId = params?.["channel-id"];
 
     if (file === null) toast.error("Please upload file to send message");
     else if (fileName !== "" && type === "image") {
@@ -471,25 +394,25 @@ const MainChat = () => {
       // Create image url
       image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${fullPath}`;
       // Create new image chat
-      if (socket && session?.user?.id) {
+      if (socket && session?.user?.id && serverId !== "" && channelId !== "") {
         socket.emit(
-          "send_direct_message",
+          "send_channel_message",
           {
             userId: session?.user?.id,
-            friendId: friend?.id,
+            serverId: serverId,
+            channelId: channelId,
             provider: "image",
             url: image,
           },
           (res: {
             message: string;
             user: UserType;
-            friend: UserType;
-            chat: DirectMessageChatType;
+            chat: ChannelMessageChatType;
           }) => {
-            // console.log("Check send direct message:", res);
-            if (res?.chat) {
-              // console.log("SEND CHAT", res?.chat);
-              setChats(res?.chat);
+            // console.log("Check send channel message:", res);
+            if (res?.message === "Send channel message successfully") {
+              const newChat = { ...res?.chat, user: res?.user };
+              setChannelChats(newChat);
             }
           }
         );
@@ -511,12 +434,13 @@ const MainChat = () => {
       // Create file url
       fileUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${fullPath}`;
       // Create new image chat
-      if (socket && session?.user?.id) {
+      if (socket && session?.user?.id && serverId !== "" && channelId !== "") {
         socket.emit(
-          "send_direct_message",
+          "send_channel_message",
           {
             userId: session?.user?.id,
-            friendId: friend?.id,
+            serverId: serverId,
+            channelId: channelId,
             provider: "file",
             url: fileUrl,
             fileName: fileDbName,
@@ -528,9 +452,9 @@ const MainChat = () => {
             chat: DirectMessageChatType;
           }) => {
             // console.log("Check send direct message:", res);
-            if (res?.chat) {
-              // console.log("SEND CHAT", res?.chat);
-              setChats(res?.chat);
+            if (res?.message === "Send channel message successfully") {
+              const newChat = { ...res?.chat, user: res?.user };
+              setChannelChats(newChat);
             }
           }
         );
@@ -579,18 +503,13 @@ const MainChat = () => {
   return (
     <div className="relative w-[100%] h-screen flex flex-col">
       <div
-        className="w-[100%] h-[56px] px-6 border border-l-0 border-r-0 border-t-0 border-b-primary-black
+        className="w-[100%] h-[51px] px-6 border border-l-0 border-r-0 border-t-0 border-b-primary-black
                         flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <Avatar className="w-[35px] h-[35px]">
-            <AvatarImage src={`${friend?.avatar}`} alt="avatar" />
-            <AvatarFallback>
-              {friend?.name && getSummaryName(friend?.name)}
-            </AvatarFallback>
-          </Avatar>
+          <p className="text-[25px] font-bold dark:text-gray-400">#</p>
           <p className="text-[13px] font-bold dark:text-gray-400">
-            {friend?.name}
+            {channel?.name}
           </p>
         </div>
         <div className="flex items-center gap-5">
@@ -598,24 +517,11 @@ const MainChat = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button>
-                  <PiPhoneCallFill size={25} />
+                  <IoMdNotifications size={25} />
                 </button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Start call</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button onClick={setUserProfileToggle}>
-                  <FaCircleUser size={25} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{userProfileToggle ? "Hide" : "Show"} user profile</p>
+                <p>Notification Settings</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -628,12 +534,12 @@ const MainChat = () => {
         }`}
       >
         <div ref={chatBoxRef} className="w-[100%] flex flex-col gap-8">
-          {friend !== null && (
+          {/* {channel !== null && (
             <div className="flex flex-col gap-3">
               <Avatar className="w-[70px] h-[70px]">
-                <AvatarImage src={`${friend?.avatar}`} alt="avatar" />
+                <AvatarImage src={`${channel?.avatar}`} alt="avatar" />
                 <AvatarFallback className="text-[30px]">
-                  {friend?.name && getSummaryName(friend?.name)}
+                  {channel?.name && getSummaryName(channel?.name)}
                 </AvatarFallback>
               </Avatar>
               <p className="font-bold text-xl">{friend?.name}</p>
@@ -654,8 +560,8 @@ const MainChat = () => {
                 </div>
               </div>
             </div>
-          )}
-          {chats?.map((chat: DirectMessageChatType) => {
+          )} */}
+          {channelChats?.map((chat: ChannelMessageChatType) => {
             if (chatsLoading) {
               return (
                 <div key={uuidv4()} className="flex items-center space-x-4">
@@ -668,7 +574,7 @@ const MainChat = () => {
               );
             }
 
-            if (!chatsLoading && friend === null) {
+            if (!chatsLoading && chat?.user === null) {
               return (
                 <div key={uuidv4()}>
                   <p>Chat is not available</p>
@@ -676,32 +582,28 @@ const MainChat = () => {
               );
             }
 
-            if (friend !== null && chat?.provider === "text") {
+            if (chat?.user !== null && chat?.provider === "text") {
               return (
                 <TextChat
                   key={uuidv4()}
-                  userIdSession={session?.user?.id ?? ""}
-                  user={
-                    chat?.userId === session?.user?.id ? session?.user : friend
-                  }
+                  userIdSession={session?.user?.id}
+                  user={chat?.user}
                   chat={chat}
-                  friend={friend}
+                  friend={chat?.user}
                   mainRef={mainRef}
                   handleDeleteChatById={handleDeleteChatById}
                 />
               );
             }
 
-            if (friend !== null && chat?.provider === "image") {
+            if (chat?.user !== null && chat?.provider === "image") {
               return (
                 <ImageChat
                   key={uuidv4()}
-                  userIdSession={session?.user?.id ?? ""}
-                  user={
-                    chat?.userId === session?.user?.id ? session?.user : friend
-                  }
+                  userIdSession={session?.user?.id}
+                  user={chat?.user}
                   chat={chat}
-                  friend={friend}
+                  friend={chat?.user}
                   mainRef={mainRef}
                   handleDeleteChatById={handleDeleteChatById}
                   handleDownloadFile={handleDownloadFile}
@@ -709,16 +611,14 @@ const MainChat = () => {
               );
             }
 
-            if (friend !== null && chat?.provider === "file") {
+            if (chat?.user !== null && chat?.provider === "file") {
               return (
                 <FileChat
                   key={uuidv4()}
-                  userIdSession={session?.user?.id ?? ""}
-                  user={
-                    chat?.userId === session?.user?.id ? session?.user : friend
-                  }
+                  userIdSession={session?.user?.id}
+                  user={chat?.user}
                   chat={chat}
-                  friend={friend}
+                  friend={chat?.user}
                   mainRef={mainRef}
                   handleDeleteChatById={handleDeleteChatById}
                   handleDownloadFile={handleDownloadFile}
@@ -729,8 +629,8 @@ const MainChat = () => {
         </div>
       </div>
       <div className="absolute w-[100%] h-[100px] bottom-0 px-6 py-4">
-        <ChatInput
-          friendName={friend?.name ? friend?.name : "undefined"}
+        <ServerChatInput
+          channelName={channel?.name ? channel?.name : "undefined"}
           handleSendMessage={handleSendMessage}
           formData={formData}
           setFormData={setFormData}
@@ -747,4 +647,4 @@ const MainChat = () => {
   );
 };
 
-export default MainChat;
+export default ChannelMainChat;
