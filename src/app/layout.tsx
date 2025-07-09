@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ReduxProvider from "@/lib/redux/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,9 +29,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ToastContainer position="bottom-left" theme="colored" />
-            <ReduxProvider>
-              {children}
-            </ReduxProvider>
+            {children}
           </ThemeProvider>
       </body>
     </html>

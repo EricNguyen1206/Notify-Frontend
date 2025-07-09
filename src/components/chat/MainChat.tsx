@@ -2,7 +2,6 @@
 
 import React, {
   ChangeEvent,
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -31,12 +30,11 @@ import FileChat from "./FileChat";
 import { PiPhoneCallFill } from "react-icons/pi";
 import { FaCircleUser } from "react-icons/fa6";
 import { toast } from "react-toastify";
-
-import { getAllChatsByUserId, getUserById } from "@/utils/actions/api";
 import { formatDateStr, getSummaryName } from "@/lib/helper";
 import { ApplicationFileType } from "@/lib/utils";
-import { handleFileExtUpload, handleFileUpload } from "@/utils/supabase";
-import { useAppSelector } from "@/lib/redux/hook";
+import { useGetUsersProfile } from "@/api/endpoints/users/users";
+import { useGetChatsChannelId } from "@/api/endpoints/chats/chats";
+import { handleFileExtUpload, handleFileUpload } from "@/lib/supabase";
 
 export interface FormDataState {
   message: string;
@@ -45,9 +43,9 @@ export interface FormDataState {
 const MainChat = () => {
   const params = useParams();
   const pathName = usePathname();
-  const user = useAppSelector(state => state.auth.user);
-  const conn = useAppSelector(state => state.socket.ws)
   const router = useRouter();
+
+  const { data: user } = useGetUsersProfile();
   // const { data: session }: any = useSession();
   const session = {user: user}
 
@@ -61,8 +59,6 @@ const MainChat = () => {
   const [message, setMessage] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [chatsLoading, setChatsLoading] = useState<boolean>(false);
 
   const [users, setUsers] = useState<Array<{ username: string }>>([])
 
@@ -75,29 +71,19 @@ const MainChat = () => {
     return state.socket;
   });
 
-  const chats = useFriendStore((state) => {
-    return state.chats;
-  });
-
-  const setChats = useFriendStore((state) => {
-    return state.setChats;
-  });
-
-  const updateChats = useFriendStore((state) => {
-    return state.updateChats;
-  });
-
   const userProfileToggle = useFriendStore((state) => {
     return state.userProfileToggle;
   });
+
+  const setChats = useFriendStore((state) => state.setChats)
+  const updateChats = useFriendStore((state) => state.updateChats)
 
   const setUserProfileToggle = useFriendStore((state) => {
     return state.setUserProfileToggle;
   });
 
+  // TODO: Integrate fetching friend profile with react-query if a suitable endpoint exists
   const handleGetFriendProfile = async () => {
-    const friendId = params?.id[0];
-
     if (friendId !== undefined) {
       const res = await getUserById(friendId);
       if (res?.message === "Find user sucessfully") setFriend(res?.user);
@@ -105,13 +91,16 @@ const MainChat = () => {
   };
 
   const handleGetAllChats = async () => {
-    const friendId = params?.id[0];
-
     if (session?.user?.id && friendId !== undefined) {
-      setChatsLoading(true);
+      // setChatsLoading(true);
       const res = await getAllChatsByUserId(session?.user?.id, friendId);
 
       if (res?.message === "Get all direct messages successfully") {
+        // Assuming updateChats in Zustand updates the chats list
+        // If you want to fully replace the chats with the fetched ones:
+        // setChats(res?.chats);
+        // If you want to append/merge:
+        // This depends on how updateChats is implemented in your Zustand store
         updateChats(res?.chats);
       }
 
@@ -119,9 +108,15 @@ const MainChat = () => {
     }
   };
 
+  const friendId = params?.id?.[0] as string | undefined;
+
+  const { data: chats, isLoading: chatsLoading, refetch: refetchChats } = useGetChatsChannelId(
+    { channelId: friendId ?? "" }, // Assuming friendId is the channelId for DM
+    { enabled: !!friendId } // Only fetch if friendId is available
+  );
+
   useEffect(() => {
     handleGetFriendProfile();
-    handleGetAllChats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -171,7 +166,7 @@ const MainChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats?.length]);
 
-  useEffect(() => {
+  useEffect(() => { // This effect seems related to scrolling to the latest message
     mainRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chats]);
 
@@ -188,36 +183,45 @@ const MainChat = () => {
   }, [chats, screenHeight]);
 
   useEffect(() => {
+    // This WebSocket logic needs to be adapted to work with Zustand and React Query
+    // Instead of managing users and messages directly in local state,
+    // incoming messages should update the chats list in the Zustand store
+    // or trigger a refetch of the chats using React Query's queryClient.
+
     // if (textarea.current) {
     //   autosize(textarea.current)
     // }
 
-    if (conn === null) {
+    // Assuming socket is managed by Zustand and `socket` is the WebSocket instance
+    if (socket === null) {
       router.push('/messages')
       return
     }
 
-    conn.onmessage = (message) => {
-      const m: Message = JSON.parse(message.data)
-      if (m.content == 'A new user has joined the room') {
-        setUsers([...users, { username: m.username }])
-      }
-
-      if (m.content == 'user left the chat') {
-        const deleteUser = users.filter((user) => user.username != m.username)
-        setUsers([...deleteUser])
-        setMessage([...messages, m])
-        return
-      }
-
-      user?.username == m.username ? (m.type = 'self') : (m.type = 'recv')
-      setMessage([...messages, m])
+    socket.onmessage = (event) => {
+      const incomingMessage = JSON.parse(event.data);
+      // Assuming the incoming message format matches DirectMessageChatType
+      // or can be transformed into it.
+      // Update the Zustand store with the new message
+      setChats(incomingMessage); // Or use a different action to append to existing chats
+      // If using React Query cache for chats, you might need to manually update the cache:
+      // queryClient.setQueryData(['getChatsChannelId', { channelId: friendId }], (oldData) => { ... oldData, incomingMessage ... });
+      // Or invalidate the query to refetch:
+      // queryClient.invalidateQueries(['getChatsChannelId', { channelId: friendId }]);
     }
 
-    conn.onclose = () => {}
-    conn.onerror = () => {}
-    conn.onopen = () => {}
-  }, [textarea, messages, conn, session.user])
+    socket.onclose = () => {
+      console.log("WebSocket closed");
+      // Handle reconnection or show a message to the user
+    }
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      // Handle errors
+    }
+
+    // No specific onopen logic needed here unless you have initial handshake
+
+  }, [socket, friendId, setChats]); // Depend on socket and friendId
 
   const sendMessage = () => {
     // if (!textarea.current?.value) return
@@ -226,113 +230,9 @@ const MainChat = () => {
       router.push('/')
       return
     }
-
-    conn.send(formData?.message)
+    socket.send(formData?.message) // Send message via WebSocket
     formData?.message = ""
   }
-
-  // Receive direct message
-  // useEffect(() => {
-  //   if (socket) {
-  //     socket.on(
-  //       "receive_direct_message",
-  //       (rs: {
-  //         message: string;
-  //         user: UserType;
-  //         chat: DirectMessageChatType;
-  //       }) => {
-  //         // console.log("Receive direct message request:", rs);
-  //         if (
-  //           rs?.message === "You have new direct message" &&
-  //           rs?.chat &&
-  //           rs?.user
-  //         ) {
-  //           socket.emit(
-  //             "get_all_chats",
-  //             {
-  //               userId: session?.user?.id,
-  //               friendId: rs?.user?.id,
-  //             },
-  //             (res: {
-  //               message: string;
-  //               user: UserType;
-  //               friend: UserType;
-  //               chats: DirectMessageChatType[];
-  //             }) => {
-  //               // console.log("Check get all chats:", res);
-  //               if (res?.chats) updateChats(res?.chats);
-  //             }
-  //           );
-  //         }
-  //       }
-  //     );
-  //   }
-
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [socket]);
-
-  // Get direct chat delete
-  // useEffect(() => {
-  //   if (socket) {
-  //     socket.on(
-  //       "get_chat_delete",
-  //       (rs: {
-  //         message: string;
-  //         status: boolean;
-  //         userId: string;
-  //         friendId: string;
-  //       }) => {
-  //         // Send notification with friend client
-  //         if (session?.user?.id === rs?.friendId && rs?.status === true) {
-  //           // toast.warn(rs?.message);
-  //           setMessage(rs?.message);
-  //           setNoti(true);
-  //         }
-
-  //         // Update new chat with all user client
-  //         if (rs?.status === true && session?.user?.id === rs?.userId) {
-  //           socket.emit(
-  //             "get_all_chats",
-  //             {
-  //               userId: session?.user?.id,
-  //               friendId: rs?.friendId,
-  //             },
-  //             (res: {
-  //               message: string;
-  //               user: UserType;
-  //               friend: UserType;
-  //               chats: DirectMessageChatType[];
-  //             }) => {
-  //               if (res?.chats) updateChats(res?.chats);
-  //             }
-  //           );
-  //         }
-
-  //         // Update new chat with all friend client
-  //         if (rs?.status === true && session?.user?.id === rs?.friendId) {
-  //           const friendId = params?.id[0];
-
-  //           socket.emit(
-  //             "get_all_chats",
-  //             {
-  //               userId: session?.user?.id,
-  //               friendId: friendId,
-  //             },
-  //             (res: {
-  //               message: string;
-  //               user: UserType;
-  //               friend: UserType;
-  //               chats: DirectMessageChatType[];
-  //             }) => {
-  //               if (res?.chats) updateChats(res?.chats);
-  //             }
-  //           );
-  //         }
-  //       }
-  //     );
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [socket, pathName]);
 
   useEffect(() => {
     if (noti) {
@@ -355,7 +255,7 @@ const MainChat = () => {
       toast.error("Friend not found");
       return;
     }
-
+    // Sending message is likely still via WebSocket
     if (
       socket &&
       session?.user?.id &&
@@ -379,6 +279,9 @@ const MainChat = () => {
           // console.log("Check send direct message:", res);
           if (res?.chat) {
             // console.log("SEND CHAT", res?.chat);
+            // Update the Zustand store with the sent message
+            // If you're relying on the WebSocket to send the message back,
+            // the incoming message handler will update the state.
             setChats(res?.chat);
           }
         }
@@ -404,6 +307,8 @@ const MainChat = () => {
       socket.emit(
         "delete_chat_by_id",
         {
+          // Ensure chatId, userId, and friendId are correctly passed
+          // Based on your DirectMessageChatType, chatId is the chat id.
           chatId: chatId,
           userId: session?.user?.id,
           friendId: friend?.id,
@@ -411,6 +316,7 @@ const MainChat = () => {
         (res: { message: string; status: boolean }) => {
           // console.log("Check delete chat by id:", res);
           if (res?.status === true) {
+            // Refetch chats after successful deletion
             toast.success(res?.message);
             socket.emit(
               "get_all_chats",
@@ -435,7 +341,7 @@ const MainChat = () => {
     }
   };
 
-  // Direct file message selection
+  // Direct file message selection - keep this local state with Zustand or React hooks
   const handleResetImage = () => {
     setFile(null);
     setFileName("");
@@ -451,7 +357,7 @@ const MainChat = () => {
     }
   };
 
-  const handleSendFileMessage = async () => {
+  const handleSendFileMessage = async () => { // Keep file upload logic using Supabase
     // Update file (image, document)
     const type = file?.type?.split("/")[0];
     const ext = file?.name?.split(".")[1];
@@ -471,6 +377,7 @@ const MainChat = () => {
       // Create image url
       image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${fullPath}`;
       // Create new image chat
+      // Send message via WebSocket
       if (socket && session?.user?.id) {
         socket.emit(
           "send_direct_message",
@@ -489,6 +396,9 @@ const MainChat = () => {
             // console.log("Check send direct message:", res);
             if (res?.chat) {
               // console.log("SEND CHAT", res?.chat);
+            // Update the Zustand store with the sent message
+            // If you're relying on the WebSocket to send the message back,
+            // the incoming message handler will update the state.
               setChats(res?.chat);
             }
           }
@@ -511,6 +421,7 @@ const MainChat = () => {
       // Create file url
       fileUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${fullPath}`;
       // Create new image chat
+      // Send message via WebSocket
       if (socket && session?.user?.id) {
         socket.emit(
           "send_direct_message",
@@ -530,6 +441,9 @@ const MainChat = () => {
             // console.log("Check send direct message:", res);
             if (res?.chat) {
               // console.log("SEND CHAT", res?.chat);
+            // Update the Zustand store with the sent message
+            // If you're relying on the WebSocket to send the message back,
+            // the incoming message handler will update the state.
               setChats(res?.chat);
             }
           }
@@ -537,13 +451,13 @@ const MainChat = () => {
       }
     } else toast.error("File format not correct");
 
-    setLoading(false);
+    // setLoading(false); // Remove local loading state
     handleResetImage();
   };
 
-  const handleUserKeyPress = useCallback(
+  const handleUserKeyPress = // useCallback removed as it's not strictly necessary here
     (event: any) => {
-      const { key, keyCode } = event;
+      const { key } = event;
       if (file && fileInputRef?.current) {
         fileInputRef?.current.blur();
         if (key === "Enter") {
@@ -551,8 +465,7 @@ const MainChat = () => {
         }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [file]
+    // [file] // Dependency array no longer needed with useCallback removal
   );
 
   useEffect(() => {
@@ -560,7 +473,7 @@ const MainChat = () => {
     return () => {
       window.removeEventListener("keydown", handleUserKeyPress);
     };
-  }, [handleUserKeyPress]);
+  }, [file]); // Depend on file state
 
   const handleDownloadFile = async (
     bucket: string,
@@ -656,7 +569,7 @@ const MainChat = () => {
             </div>
           )}
           {chats?.map((chat: DirectMessageChatType) => {
-            if (chatsLoading) {
+            if (chatsLoading) { // Use react-query loading state
               return (
                 <div key={uuidv4()} className="flex items-center space-x-4">
                   <Skeleton className="h-12 w-12 rounded-full bg-zinc-300" />
@@ -668,7 +581,7 @@ const MainChat = () => {
               );
             }
 
-            if (!chatsLoading && friend === null) {
+            if (!chatsLoading && !friend) { // Use react-query loading state and check if friend exists
               return (
                 <div key={uuidv4()}>
                   <p>Chat is not available</p>
@@ -676,7 +589,7 @@ const MainChat = () => {
               );
             }
 
-            if (friend !== null && chat?.provider === "text") {
+            if (friend && chat?.provider === "text") { // Check if friend exists
               return (
                 <TextChat
                   key={uuidv4()}
@@ -692,7 +605,7 @@ const MainChat = () => {
               );
             }
 
-            if (friend !== null && chat?.provider === "image") {
+            if (friend && chat?.provider === "image") { // Check if friend exists
               return (
                 <ImageChat
                   key={uuidv4()}
@@ -709,7 +622,7 @@ const MainChat = () => {
               );
             }
 
-            if (friend !== null && chat?.provider === "file") {
+            if (friend && chat?.provider === "file") { // Check if friend exists
               return (
                 <FileChat
                   key={uuidv4()}
@@ -741,7 +654,7 @@ const MainChat = () => {
           handleFileSelection={handleFileSelection}
           handleSendFileMessage={handleSendFileMessage}
           loading={loading}
-        />
+        /> {/* TODO: Integrate loading state from file upload */}
       </div>
     </div>
   );

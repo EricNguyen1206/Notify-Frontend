@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useFriendStore, useSocketStore } from "@/lib/store";
 import { usePathname, useRouter, useParams } from "next/navigation";
 
-import { getSummaryName } from "@/lib/helper";
 import { AiOutlineShop } from "react-icons/ai";
 import { IoMdAdd } from "react-icons/io";
 import { MdClear } from "react-icons/md";
@@ -30,7 +28,7 @@ const Subslidebar = () => {
   const router = useRouter();
   const params = useParams<{id: string}>();
   const channelId = params.id
-  const category = usePathname().split("/dashboard/")[1]; 
+  const category = usePathname().split("/dashboard/")[1];
   const [channels, setChannels] = useState<any[]>([])
 
 
@@ -69,7 +67,7 @@ const Subslidebar = () => {
   const handleJoinChannel = async (id: string) => {
     if (id != channelId) {
       dispatch(joinChannel({channelId: id, username: session.user.name, clientId: session.user.id}));
-  
+
       router.push(`/messages/${id}`);
     }
   }
@@ -244,7 +242,7 @@ const Subslidebar = () => {
                     : "text-zinc-500 dark:text-zinc-500"
                 }`}
               >
-                <Link href={`/dashboard/friends/messages/${user?.id}`}>
+                <Link href={`/`}>
                   <div className="flex items-center gap-3">
                     <Avatar className="w-[30px] h-[30px]">
                       <AvatarImage
@@ -252,7 +250,7 @@ const Subslidebar = () => {
                         alt="avatar"
                       />
                       <AvatarFallback>
-                        {user?.name && getSummaryName(user?.name)}
+                        {user?.name && user.name[0]}
                       </AvatarFallback>
                     </Avatar>
                     <p

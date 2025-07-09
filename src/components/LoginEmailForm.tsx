@@ -1,50 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { UserType } from "@/types";
-import { loginByEmail } from "@/utils/actions/api";
+import { usePostAuthLogin } from '@/api/endpoints/auth/auth';
 
 const LoginEmailForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const mutation = usePostAuthLogin();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
     setIsLoading(true);
-
     try {
-      const newUser: UserType = {
-        email: email,
-        password: password,
-      };
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(newUser),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      })
-      const data = await res.json();
-      console.log("TEST 1", data);
-
-      if (data) {
-        toast.success("Login successfully");
-        router.push("/dashboard/friends");
-      } else {
-        toast.error(data.message ?? "Login failed");
-      }
-    } catch (error) {
-      toast.error("An error occurred during login");
-    } finally {
-      setIsLoading(false);
+        // Get email and password from form inputs
+        mutation.mutate({ data: { email, password } });
+    } catch {
+        toast.error("Something went wrong");
     }
   };
+
+  useEffect(() => {
+    if (mutation.isSuccess) {
+      toast.success("Login successfully");
+      router.push("/dashboard/friends");
+      setIsLoading(false);
+    }
+    if (mutation.isError) {
+      toast.error("An error occurred during login");
+      setIsLoading(false);
+    }
+  }, [mutation.isSuccess, mutation.isError])
 
   return (
     <form
@@ -84,8 +74,8 @@ const LoginEmailForm = () => {
           Forgot your password?
         </p>
       </Link>
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         className="bg-primary-purple text-white py-2 rounded-md"
         disabled={isLoading}
       >

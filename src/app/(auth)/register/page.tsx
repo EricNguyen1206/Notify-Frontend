@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import RegisterForm from "@/components/RegisterForm";
 
 const RegisterPage = () => {
