@@ -15,135 +15,43 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { joinChannel } from "@/lib/redux/features/socketSlice"
-import { fetchFriends } from "@/lib/redux/features/friendSlice";
-import { useAppDispatch, useAppSelector } from "@/lib/redux/hook";
-import { RootState } from "@/lib/redux/store";
-import { getConnectChannels } from "@/utils/actions/channel";
+import { useSocketStore } from "@/store/useSocketStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useChannelStore } from "@/store/useChannelStore";
+import { useGetChannels } from "@/api/endpoints/channels/channels";
 
 const Subslidebar = () => {
-  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
-  const dispatch = useAppDispatch();
-  const friends = useAppSelector((state: RootState) => state.friend.friends);
   const router = useRouter();
-  const params = useParams<{id: string}>();
-  const channelId = params.id
+  const params = useParams<{ id: string }>();
+  const channelId = Number(params.id)
   const category = usePathname().split("/dashboard/")[1];
-  const [channels, setChannels] = useState<any[]>([])
 
+  /** -------------------- GLOBAL STATE -------------------- */
+  const { user } = useAuthStore()
+  const { socket } = useSocketStore();
+  const { channels, currentChannel, setChannels } = useChannelStore();
 
-  const socket = useSocketStore((state) => {
-    return state.socket;
-  });
+  /** -------------------- DATA FETCHING -------------------- */
 
-  const setPendings = useFriendStore((state) => {
-    return state.setPendings;
-  });
-/** --------------------EVENT HANDLER-------------------- */
+  // Use react-query to fetch channels
+  const { data: channelsData, isLoading: isChannelsLoading, error: channelsError } = useGetChannels();
+
+  /** -------------------- EVENT HANDLER -------------------- */
 
   // const updateDirectMessages = useFriendStore((state) => {
   //   return state.updateDirectMessages;
   // });
 
 
-  const handleGetChannels = async () => {
-    try {
-      const data = await getConnectChannels();
-      console.log("TEST", data);
-      setChannels(
-        data.map((item : any) => (
-          {
-            ...item,
-          })));
-    } catch {
-      setChannels([]);
-    }
-  }
 
-  const handleGetFriendsFromDB = async (userId: string) => {
-    dispatch(fetchFriends(userId));
-  };
-
-  const handleJoinChannel = async (id: string) => {
-    if (id != channelId) {
-      dispatch(joinChannel({channelId: id, username: session.user.name, clientId: session.user.id}));
+  const handleJoinChannel = async (id: number) => {
+    if (id != channelId && user) {
 
       router.push(`/messages/${id}`);
     }
   }
 
-  useEffect(() => {
-    handleGetChannels();
-  }, [])
 
-  useEffect(() => {
-    if (socket) {
-      // socket.on(
-      //   "get_friend_request",
-      //   (rs: { message: string; user: UserType }) => {
-      //     const { user }: any = rs;
-
-      //     setPendings(user);
-      //   }
-      // );
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      handleGetFriendsFromDB(session?.user?.id);
-      // handleGetDirectMessagesFromDB();
-    }
-  }, [session?.user?.id]);
-
-  useEffect(() => {
-    if (socket) {
-      // socket.on("new_friend", (rs: { message: string; user: UserType }) => {
-      //   if (rs?.message === "You have a new friend") {
-      //     toast.info(`You and ${rs?.user?.email} just become a friend`);
-
-      //     if (session?.user?.id) handleGetFriendsFromDB(session?.user?.id);
-      //   }
-      // });
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
-
-  // Receive direct message
-  useEffect(() => {
-    if (socket) {
-      // socket.on(
-      //   "receive_direct_message",
-      //   (rs: {
-      //     message: string;
-      //     user: UserType;
-      //     friend: UserType;
-      //     chat: DirectMessageChatType;
-      //   }) => {
-          // if (rs?.message === "You have new direct message" && rs?.user) {
-
-          //   socket.emit(
-          //     "get_direct_messages",
-          //     {
-          //       email: session?.user?.email,
-          //       prevFriend: rs?.user,
-          //     },
-          //     (res: { message: string; friends: UserType[] }) => {
-          //       if (res?.friends) {
-          //         updateDirectMessages(res?.friends);
-          //       }
-          //     }
-          //   );
-          // }
-      //   }
-      // );
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
 
   const handleDeleteDirectMessage = (friendEmail: string | undefined) => {
     // TODO: Implement delete direct message
@@ -177,6 +85,69 @@ const Subslidebar = () => {
     return true;
   };
 
+
+  /** -------------------- LIFE CIRCLE -------------------- */
+
+  useEffect(() => {
+    if (channelsData && Array.isArray(channelsData.data)) {
+      setChannels(
+        channelsData.data.map((ch) => ({
+          id: ch.id ?? 0,
+          name: ch.name ?? "",
+          ownerId: ch.ownerId ?? 0,
+          createdAt: ch.createdAt ?? "",
+        }))
+      );
+    } else {
+      setChannels([]);
+    }
+  }, [channelsData, setChannels]);
+
+  useEffect(() => {
+    if (user?.id) {
+      // TODO: Get direct message from DB
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (socket) {
+      // socket.on("new_friend", (rs: { message: string; user: UserType }) => {
+      //   if (rs?.message === "You have a new friend") {
+      //     toast.info(`You and ${rs?.user?.email} just become a friend`);
+
+      //     if (session?.user?.id) handleGetFriendsFromDB(session?.user?.id);
+      //   }
+      // });
+
+      // Receive direct message
+      // socket.on(
+      //   "receive_direct_message",
+      //   (rs: {
+      //     message: string;
+      //     user: UserType;
+      //     friend: UserType;
+      //     chat: DirectMessageChatType;
+      //   }) => {
+      // if (rs?.message === "You have new direct message" && rs?.user) {
+
+      //   socket.emit(
+      //     "get_direct_messages",
+      //     {
+      //       email: session?.user?.email,
+      //       prevFriend: rs?.user,
+      //     },
+      //     (res: { message: string; friends: UserType[] }) => {
+      //       if (res?.friends) {
+      //         updateDirectMessages(res?.friends);
+      //       }
+      //     }
+      //   );
+      // }
+      //   }
+      // );
+    }
+  }, [socket]);
+
   return (
     <div className="relative w-[240px] overflow-x-auto bg-secondary-white dark:bg-primary-gray dark:text-gray-400">
       <div className="px-2 py-3 flex items-center justify-center border border-b-primary-black">
@@ -187,29 +158,28 @@ const Subslidebar = () => {
         />
       </div>
       <div className="flex flex-col gap-1 p-3">
-        {channels?.map((item) => {
+        {channels.map((item) => {
           return (
             // <Link key={item.name} href={item.url}>
-              <div
+            <div
               key={item.name}
               onClick={() => handleJoinChannel(item.id)}
-                className={`px-2 py-3 rounded-md text-[14px] flex items-center gap-5
+              className={`px-2 py-3 rounded-md text-[14px] flex items-center gap-5
                             text-zinc-500 hover:bg-zinc-300 hover:text-primary-black
-                            dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${
-                              category !== undefined &&
-                              !category.includes("/messages") &&
-                              category?.includes(item.name.toLowerCase()) &&
-                              "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
-                            }`}
-              >
-                <AiOutlineShop size={25} />
-                <p>{item.name}</p>
-              </div>
+                            dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${category !== undefined &&
+                !category.includes("/messages") &&
+                category?.includes(item.name.toLowerCase()) &&
+                "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
+                }`}
+            >
+              <AiOutlineShop size={25} />
+              <p>{item.name}</p>
+            </div>
             // </Link>
           );
         })}
       </div>
-      <div
+      {/* <div
         className="w-[100%] mt-5 overflow-y-auto flex items-center justify-between px-6 text-[12px] dark:text-gray-400 font-bold hover:dark:text-gray-300"
       >
         <p>DIRECT MESSAGES</p>
@@ -277,7 +247,7 @@ const Subslidebar = () => {
             );
           })}
         </div>
-      </div>
+      </div> */}
       <UserProfile />
     </div>
   );

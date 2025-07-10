@@ -1,7 +1,5 @@
 import { create } from 'zustand'
 
-import { useAuthStore } from './useAuthStore'
-
 interface Channel {
     id: number
     name: string
@@ -12,8 +10,7 @@ interface Channel {
   interface ChannelState {
     channels: Channel[]
     currentChannel: Channel | null
-    fetchChannels: () => Promise<void>
-    createChannel: (name: string) => Promise<void>
+    setChannels: (channelsData: Channel[]) => void
     setCurrentChannel: (channel: Channel) => void
   }
 
@@ -21,24 +18,6 @@ interface Channel {
     channels: [],
     currentChannel: null,
 
-    fetchChannels: async () => {
-      const token = useAuthStore.getState().token
-      const res = await fetch('/channels', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
-      if (res.ok) set({ channels: data })
-    },
-
-    createChannel: async (name: string) => {
-      const token = useAuthStore.getState().token
-      const res = await fetch('/channels', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      })
-      if (res.ok) await useChannelStore.getState().fetchChannels()
-    },
-
+    setChannels: (channelsData: Channel[]) => set({channels: channelsData}),
     setCurrentChannel: (channel) => set({ currentChannel: channel }),
   }))
