@@ -18,7 +18,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSocketStore } from "@/store/useSocketStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChannelStore } from "@/store/useChannelStore";
-import { useGetChannels } from "@/api/endpoints/channels/channels";
+import { useGetChannels } from "@/services/endpoints/channels/channels";
+import { ModelsChannelListResponse } from "@/services/schemas";
 
 const Subslidebar = () => {
   const router = useRouter();
@@ -89,9 +90,9 @@ const Subslidebar = () => {
   /** -------------------- LIFE CIRCLE -------------------- */
 
   useEffect(() => {
-    if (channelsData && Array.isArray(channelsData.data)) {
+    if (channelsData && Array.isArray(channelsData)) {
       setChannels(
-        channelsData.data.map((ch) => ({
+        channelsData.map((ch: ModelsChannelListResponse) => ({
           id: ch.id ?? 0,
           name: ch.name ?? "",
           ownerId: ch.ownerId ?? 0,

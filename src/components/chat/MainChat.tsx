@@ -32,9 +32,10 @@ import { FaCircleUser } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { formatDateStr, getSummaryName } from "@/lib/helper";
 import { ApplicationFileType } from "@/lib/utils";
-import { useGetUsersProfile } from "@/api/endpoints/users/users";
-import { useGetChatsChannelId } from "@/api/endpoints/chats/chats";
+import { useGetUsersProfile } from "@/services/endpoints/users/users";
+import { useGetChatsChannelId } from "@/services/endpoints/chats/chats";
 import { handleFileExtUpload, handleFileUpload } from "@/lib/supabase";
+import { ModelsChatResponse } from "@/services/schemas";
 
 export interface FormDataState {
   message: string;
@@ -45,11 +46,11 @@ const MainChat = () => {
 
   // Get current user profile
   const { data: userData } = useGetUsersProfile();
-  const sessionUser = userData?.data
+  const sessionUser = userData
     ? {
-        id: String(userData.data.id ?? ""),
-        name: userData.data.username ?? "",
-        email: userData.data.email ?? "",
+        id: String(userData.id ?? ""),
+        name: userData.username ?? "",
+        email: userData.email ?? "",
       }
     : undefined;
 
@@ -64,8 +65,8 @@ const MainChat = () => {
   } = useGetChatsChannelId(channelId ?? 0, { query: { enabled: !!channelId } });
 
   // Map API response to DirectMessageChatType[]
-  const chats: DirectMessageChatType[] = Array.isArray(chatsData?.data)
-    ? chatsData.data.map((chat) => ({
+  const chats: DirectMessageChatType[] = Array.isArray(chatsData)
+    ? chatsData.map((chat: ModelsChatResponse) => ({
         id: String(chat.id ?? ""),
         user: {}, // You may want to fetch user details if needed
         userId: String(chat.senderId ?? ""),

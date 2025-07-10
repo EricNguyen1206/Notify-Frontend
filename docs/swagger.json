@@ -8,7 +8,7 @@
     },
     "servers": [
         {
-            "url": "https://otify-chat-service-ericnguyen12066277-dpas4103.leapcell.dev"
+            "url": "/"
         }
     ],
     "paths": {
@@ -32,14 +32,11 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login successful - returns JWT token",
+                        "description": "Login successful - returns JWT token and user data",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {
-                                        "type": "string"
-                                    }
+                                    "$ref": "#/components/schemas/models.LoginResponse"
                                 }
                             }
                         }
@@ -1073,6 +1070,17 @@
                     },
                     "password": {
                         "type": "string"
+                    }
+                }
+            },
+            "models.LoginResponse": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/models.UserResponse"
                     }
                 }
             },

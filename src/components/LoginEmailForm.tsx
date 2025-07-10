@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { usePostAuthLogin } from '@/api/endpoints/auth/auth';
+import { usePostAuthLogin } from '@/services/endpoints/auth/auth';
+import { useAuthStore } from "@/store/useAuthStore";
+import { useGetUsersProfile } from "@/services/endpoints/users/users";
+import { ModelsLoginResponse } from "@/services/schemas";
 
 const LoginEmailForm = () => {
   const [email, setEmail] = useState("");
@@ -12,6 +15,21 @@ const LoginEmailForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const mutation = usePostAuthLogin();
+
+  const userMutation = useGetUsersProfile({
+    query: {
+      onSuccess: (data) => {
+        if (!data) return;
+        setUser({
+          id: data.id!,
+          email: data.email || "",
+          username: data.username || "",
+        });
+      },
+    },
+  });
+
+  const { setToken, setUser, setIsAuthenticated } = useAuthStore();
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -24,11 +42,22 @@ const LoginEmailForm = () => {
     }
   };
 
+  const handleLoginSuccess = async (data: ModelsLoginResponse) => {
+    setToken(data.token!);
+    setUser({
+      id: data.user?.id!,
+      email: data.user?.email!,
+      username: data.user?.username || "",
+    }); 
+    setIsAuthenticated(true);
+    router.push("/");
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     if (mutation.isSuccess) {
       toast.success("Login successfully");
-      router.push("/dashboard/friends");
-      setIsLoading(false);
+      handleLoginSuccess(mutation.data!);
     }
     if (mutation.isError) {
       toast.error("An error occurred during login");

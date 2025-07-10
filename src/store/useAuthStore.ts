@@ -14,6 +14,9 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   fetchProfile: () => Promise<void>
+  setToken: (token: string) => void
+  setUser: (user: User) => void
+  setIsAuthenticated: (isAuthenticated: boolean) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -46,6 +49,10 @@ export const useAuthStore = create<AuthState>()(
         const user = await res.json()
         if (res.ok) set({ user })
       },
+
+      setToken: (token: string) => set({ token }),
+      setUser: (user: User) => set({ user }),
+      setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
     }),
     {
       name: 'auth-storage', // localStorage key
