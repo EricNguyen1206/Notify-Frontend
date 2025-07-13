@@ -4,46 +4,53 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { UserType } from "@/types";
-import { loginByEmail } from "@/utils/actions/api";
+import { usePostAuthLogin } from '@/services/endpoints/auth/auth';
+import { useAuthStore } from "@/store/useAuthStore";
 
 const LoginEmailForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const newUser: UserType = {
-        email: email,
-        password: password,
-      };
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(newUser),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      })
-      const data = await res.json();
-      console.log("TEST 1", data);
-
-      if (data) {
-        toast.success("Login successfully");
-        router.push("/dashboard/friends");
-      } else {
-        toast.error(data.message ?? "Login failed");
+  const { setUser, setIsAuthenticated, setToken } = useAuthStore();
+  
+  const loginMutation = usePostAuthLogin({
+    mutation: {
+      onSuccess: (res) => {
+        const data = res.data
+        // Assuming the response contains a token and user data
+        if (!data || !data.token || !data.user) {
+          toast.error("Invalid login response");
+          return;
+        }
+        const { token, user } = data;
+        
+        if (token && user) {
+          // Store token in cookie
+          document.cookie = `token=${token}; path=/; max-age=${60 * 60}; samesite=lax${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
+          
+          // Update Zustand state
+          setToken(token);
+          setUser({
+            id: user.id!,
+            email: user.email!,
+            username: user.username || ''
+          });
+          setIsAuthenticated(true);
+          
+          toast.success("Login successfully");
+          router.push("/messages");
+        }
+      },
+      onError: (error) => {
+        toast.error("An error occurred during login");
+        console.error('Login error:', error);
       }
-    } catch (error) {
-      toast.error("An error occurred during login");
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    loginMutation.mutate({ data: { email, password } });
   };
 
   return (
@@ -84,12 +91,12 @@ const LoginEmailForm = () => {
           Forgot your password?
         </p>
       </Link>
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         className="bg-primary-purple text-white py-2 rounded-md"
-        disabled={isLoading}
+        disabled={loginMutation.isLoading}
       >
-        {isLoading ? "Loading..." : "Log In"}
+        {loginMutation.isLoading ? "Loading..." : "Log In"}
       </button>
       <div className="text-[12px] flex items-center gap-1">
         <p>Need an account?</p>

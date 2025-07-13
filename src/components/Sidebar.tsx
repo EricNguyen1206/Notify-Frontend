@@ -2,13 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useFriendStore, useSocketStore } from "@/lib/store";
 import { usePathname, useRouter, useParams } from "next/navigation";
 
-import { getSummaryName } from "@/lib/helper";
-import { AiOutlineShop } from "react-icons/ai";
-import { IoMdAdd } from "react-icons/io";
-import { MdClear } from "react-icons/md";
 import UserProfile from "./UserProfile";
 import {
   Tooltip,
@@ -17,135 +12,49 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { joinChannel } from "@/lib/redux/features/socketSlice"
-import { fetchFriends } from "@/lib/redux/features/friendSlice";
-import { useAppDispatch, useAppSelector } from "@/lib/redux/hook";
-import { RootState } from "@/lib/redux/store";
-import { getConnectChannels } from "@/utils/actions/channel";
+import { useSocketStore } from "@/store/useSocketStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useChannelStore } from "@/store/useChannelStore";
+import { useGetChannels } from "@/services/endpoints/channels/channels";
+import { ModelsChannelListResponse } from "@/services/schemas";
+import { Plus , Tv } from "lucide-react";
+import CreateNewChannelDialog from "./channel/CreateNewChannelDialog";
 
 const Subslidebar = () => {
-  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
-  const dispatch = useAppDispatch();
-  const friends = useAppSelector((state: RootState) => state.friend.friends);
   const router = useRouter();
-  const params = useParams<{id: string}>();
-  const channelId = params.id
-  const category = usePathname().split("/dashboard/")[1]; 
-  const [channels, setChannels] = useState<any[]>([])
+  const params = useParams<{ id: string }>();
+  const channelId = Number(params.id)
+  const pathname = usePathname();
+
+  const [openCreateChannel, setOpenCreateChannel] = useState<boolean>(false);
 
 
-  const socket = useSocketStore((state) => {
-    return state.socket;
-  });
+  /** -------------------- GLOBAL STATE -------------------- */
+  const { user } = useAuthStore()
+  const { socket } = useSocketStore();
+  const { channels, currentChannel, setChannels } = useChannelStore();
 
-  const setPendings = useFriendStore((state) => {
-    return state.setPendings;
-  });
-/** --------------------EVENT HANDLER-------------------- */
+  /** -------------------- DATA FETCHING -------------------- */
+
+  // Use react-query to fetch channels
+  const { data: channelsData, isLoading: isChannelsLoading, error: channelsError } = useGetChannels();
+
+  /** -------------------- EVENT HANDLER -------------------- */
 
   // const updateDirectMessages = useFriendStore((state) => {
   //   return state.updateDirectMessages;
   // });
 
 
-  const handleGetChannels = async () => {
-    try {
-      const data = await getConnectChannels();
-      console.log("TEST", data);
-      setChannels(
-        data.map((item : any) => (
-          {
-            ...item,
-          })));
-    } catch {
-      setChannels([]);
-    }
-  }
 
-  const handleGetFriendsFromDB = async (userId: string) => {
-    dispatch(fetchFriends(userId));
-  };
+  const handleJoinChannel = async (id: number) => {
+    if (id != channelId && user) {
 
-  const handleJoinChannel = async (id: string) => {
-    if (id != channelId) {
-      dispatch(joinChannel({channelId: id, username: session.user.name, clientId: session.user.id}));
-  
       router.push(`/messages/${id}`);
     }
   }
 
-  useEffect(() => {
-    handleGetChannels();
-  }, [])
 
-  useEffect(() => {
-    if (socket) {
-      // socket.on(
-      //   "get_friend_request",
-      //   (rs: { message: string; user: UserType }) => {
-      //     const { user }: any = rs;
-
-      //     setPendings(user);
-      //   }
-      // );
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      handleGetFriendsFromDB(session?.user?.id);
-      // handleGetDirectMessagesFromDB();
-    }
-  }, [session?.user?.id]);
-
-  useEffect(() => {
-    if (socket) {
-      // socket.on("new_friend", (rs: { message: string; user: UserType }) => {
-      //   if (rs?.message === "You have a new friend") {
-      //     toast.info(`You and ${rs?.user?.email} just become a friend`);
-
-      //     if (session?.user?.id) handleGetFriendsFromDB(session?.user?.id);
-      //   }
-      // });
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
-
-  // Receive direct message
-  useEffect(() => {
-    if (socket) {
-      // socket.on(
-      //   "receive_direct_message",
-      //   (rs: {
-      //     message: string;
-      //     user: UserType;
-      //     friend: UserType;
-      //     chat: DirectMessageChatType;
-      //   }) => {
-          // if (rs?.message === "You have new direct message" && rs?.user) {
-
-          //   socket.emit(
-          //     "get_direct_messages",
-          //     {
-          //       email: session?.user?.email,
-          //       prevFriend: rs?.user,
-          //     },
-          //     (res: { message: string; friends: UserType[] }) => {
-          //       if (res?.friends) {
-          //         updateDirectMessages(res?.friends);
-          //       }
-          //     }
-          //   );
-          // }
-      //   }
-      // );
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
 
   const handleDeleteDirectMessage = (friendEmail: string | undefined) => {
     // TODO: Implement delete direct message
@@ -179,6 +88,69 @@ const Subslidebar = () => {
     return true;
   };
 
+
+  /** -------------------- LIFE CIRCLE -------------------- */
+
+  useEffect(() => {
+    if (channelsData?.data && Array.isArray(channelsData.data)) {
+      setChannels(
+        channelsData.data.map((ch: ModelsChannelListResponse) => ({
+          id: ch.id ?? 0,
+          name: ch.name ?? "",
+          ownerId: ch.ownerId ?? 0,
+          createdAt: ch.createdAt ?? "",
+        }))
+      );
+    } else {
+      setChannels([]);
+    }
+  }, [channelsData, setChannels]);
+
+  useEffect(() => {
+    if (user?.id) {
+      // TODO: Get direct message from DB
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (socket) {
+      // socket.on("new_friend", (rs: { message: string; user: UserType }) => {
+      //   if (rs?.message === "You have a new friend") {
+      //     toast.info(`You and ${rs?.user?.email} just become a friend`);
+
+      //     if (session?.user?.id) handleGetFriendsFromDB(session?.user?.id);
+      //   }
+      // });
+
+      // Receive direct message
+      // socket.on(
+      //   "receive_direct_message",
+      //   (rs: {
+      //     message: string;
+      //     user: UserType;
+      //     friend: UserType;
+      //     chat: DirectMessageChatType;
+      //   }) => {
+      // if (rs?.message === "You have new direct message" && rs?.user) {
+
+      //   socket.emit(
+      //     "get_direct_messages",
+      //     {
+      //       email: session?.user?.email,
+      //       prevFriend: rs?.user,
+      //     },
+      //     (res: { message: string; friends: UserType[] }) => {
+      //       if (res?.friends) {
+      //         updateDirectMessages(res?.friends);
+      //       }
+      //     }
+      //   );
+      // }
+      //   }
+      // );
+    }
+  }, [socket]);
+
   return (
     <div className="relative w-[240px] overflow-x-auto bg-secondary-white dark:bg-primary-gray dark:text-gray-400">
       <div className="px-2 py-3 flex items-center justify-center border border-b-primary-black">
@@ -188,30 +160,63 @@ const Subslidebar = () => {
           placeholder="Find or start a conversation"
         />
       </div>
+      <div className="w-[100%] mt-2 flex items-center justify-between px-6 text-[12px] dark:text-gray-400 font-bold hover:dark:text-gray-300">
+        <p>CHANNELS</p>
+        <div className="text-xs text-gray-500">
+          {isChannelsLoading ? "Loading..." : 
+            <button className="dark:hover:text-white p-[6px] rounded-md
+                        hover:bg-secondary-white hover:text-primary-gray
+                        dark:hover:bg-secondary-gray">
+              <CreateNewChannelDialog
+                  openCreateChannel={openCreateChannel}
+                  setOpenCreateChannel={setOpenCreateChannel}
+                >
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Plus size={20} />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Create Channel</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CreateNewChannelDialog>
+            </button>
+          }
+        </div>
+      </div>
       <div className="flex flex-col gap-1 p-3">
-        {channels?.map((item) => {
-          return (
-            // <Link key={item.name} href={item.url}>
+        {isChannelsLoading ? (
+          <div className="text-center text-gray-500 py-4">Loading channels...</div>
+        ) : channelsError ? (
+          <div className="text-center text-red-500 py-4">Error loading channels</div>
+        ) : channels.length === 0 ? (
+          <div className="text-center text-gray-500 py-4">No channels found</div>
+        ) : (
+          channels.map((item) => {
+            return (
+              // <Link key={item.name} href={item.url}>
               <div
-              key={item.name}
-              onClick={() => handleJoinChannel(item.id)}
-                className={`px-2 py-3 rounded-md text-[14px] flex items-center gap-5
-                            text-zinc-500 hover:bg-zinc-300 hover:text-primary-black
-                            dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${
-                              category !== undefined &&
-                              !category.includes("/messages") &&
-                              category?.includes(item.name.toLowerCase()) &&
-                              "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
-                            }`}
+                key={item.name}
+                onClick={() => handleJoinChannel(item.id)}
+                className={`px-2 py-3 rounded-md text-[14px] flex items-center gap-5 cursor-pointer
+                              text-zinc-500 hover:bg-zinc-300 hover:text-primary-black
+                              dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${
+                                channelId === item.id
+                                  ? "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
+                                  : ""
+                              }`}
               >
-                <AiOutlineShop size={25} />
+                <Tv />
                 <p>{item.name}</p>
               </div>
-            // </Link>
-          );
-        })}
+              // </Link>
+            );
+          })
+        )}
       </div>
-      <div
+      {/* <div
         className="w-[100%] mt-5 overflow-y-auto flex items-center justify-between px-6 text-[12px] dark:text-gray-400 font-bold hover:dark:text-gray-300"
       >
         <p>DIRECT MESSAGES</p>
@@ -244,7 +249,7 @@ const Subslidebar = () => {
                     : "text-zinc-500 dark:text-zinc-500"
                 }`}
               >
-                <Link href={`/dashboard/friends/messages/${user?.id}`}>
+                <Link href={`/`}>
                   <div className="flex items-center gap-3">
                     <Avatar className="w-[30px] h-[30px]">
                       <AvatarImage
@@ -252,7 +257,7 @@ const Subslidebar = () => {
                         alt="avatar"
                       />
                       <AvatarFallback>
-                        {user?.name && getSummaryName(user?.name)}
+                        {user?.name && user.name[0]}
                       </AvatarFallback>
                     </Avatar>
                     <p
@@ -279,7 +284,7 @@ const Subslidebar = () => {
             );
           })}
         </div>
-      </div>
+      </div> */}
       <UserProfile />
     </div>
   );

@@ -3,38 +3,78 @@
 "use client";
 
 import Link from "next/link";
-import { useFormState } from "react-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-
-import { handleRegister } from "@/lib/action";
-
-import ActionFormBtn from "./ActionFormBtn";
+import { usePostAuthRegister } from '@/services/endpoints/auth/auth';
 
 const RegisterForm = () => {
-  const [state, formAction] = useFormState(handleRegister, undefined);
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState({
     email: "",
     name: "",
     password: "",
     adminCode: "",
   });
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const router = useRouter();
+  
+  const registerMutation = usePostAuthRegister({
+    mutation: {
+      onSuccess: (data) => {
+        // Registration successful, redirect to login
+        toast.success("Registration successful! Please log in with your credentials.");
+        router.push("/login");
+      },
+      onError: (error) => {
+        toast.error("An error occurred during registration");
+        console.error('Registration error:', error);
+      }
+    }
+  });
 
-  useEffect(() => {
-    if (state?.message === "Register account successfully") {
-      toast.success(state.message);
-      router.push("/login");
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    
+    // Validate required fields
+    if (!formData.email || !formData.password || !formData.name) {
+      toast.error('Please fill in all required fields');
+      return;
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+    // Check if user agreed to terms
+    if (!agreeToTerms) {
+      toast.error('You must agree to the terms of service to continue');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    // Validate password strength
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
+    // Prepare registration data
+    const registrationData = {
+      email: formData.email,
+      password: formData.password,
+      username: formData.name,
+      ...(formData.adminCode && { adminCode: formData.adminCode })
+    };
+
+    registerMutation.mutate({ data: registrationData });
+  };
 
   return (
     <form
       className="flex flex-col gap-5 w-[100%] md:w-auto"
-      action={formAction}
+      onSubmit={handleSubmit}
     >
       <div className="flex flex-col gap-3 items-center">
         <h1 className="text-xl font-bold">Create an account</h1>
@@ -89,7 +129,12 @@ const RegisterForm = () => {
         />
       </div>
       <div className="flex items-center gap-3">
-        <input className="w-[23px] h-[23px]" type="checkbox" name="agree" />
+        <input 
+          className="w-[23px] h-[23px]" 
+          type="checkbox" 
+          checked={agreeToTerms}
+          onChange={(e) => setAgreeToTerms(e.target.checked)}
+        />
         <div className="text-[12px] flex flex-wrap items-center gap-1 text-gray-400">
           <p>Agree to Discord's</p>
           <Link href={"https://discord.com/terms"}>
@@ -105,7 +150,13 @@ const RegisterForm = () => {
           </Link>
         </div>
       </div>
-      <ActionFormBtn defaultText={"Continue"} />
+      <button
+        type="submit"
+        className="bg-primary-purple text-white py-2 rounded-md"
+        disabled={registerMutation.isLoading}
+      >
+        {registerMutation.isLoading ? "Loading..." : "Continue"}
+      </button>
       <div className="text-[12px] flex flex-wrap items-center gap-1 text-gray-400">
         <p>By registering, you agree to Discord's</p>
         <Link href={"https://discord.com/terms"}>
@@ -120,7 +171,6 @@ const RegisterForm = () => {
           </p>
         </Link>
       </div>
-      <p className="text-red-500 text-center">{state?.error}</p>
       <div className="text-[12px] flex items-center gap-1">
         <Link href={"/login"}>
           <p className="text-sky-500 hover:underline hover:underline-offset-1">

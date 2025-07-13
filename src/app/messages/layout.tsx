@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Sidebar from "@/components/Sidebar";
-// import SocketProvider from "@/components/SocketProvider";
 import ScreenProvider from "@/components/providers/ScreenProvider";
 
 export const metadata: Metadata = {
   title: "Discord Clone | Direct Messages",
-  description: "Developed by minhtrifit",
+  description: "Developed by ericnguyen1206",
 };
 
 export default function Layout({

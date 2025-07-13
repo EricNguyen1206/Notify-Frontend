@@ -1,5 +1,3 @@
-import { useFriendStore, useSocketStore } from "@/lib/store";
-
 import {
   Tooltip,
   TooltipContent,
@@ -16,10 +14,10 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { FaRegTrashAlt } from "react-icons/fa";
 
 import { getSummaryName, formatDateStr } from "@/lib/helper";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface PropType {
   userIdSession: string;
-  user: UserType;
   chat: DirectMessageChatType;
   friend?: UserType;
   mainRef: React.RefObject<HTMLDivElement>;
@@ -27,19 +25,11 @@ interface PropType {
 }
 
 const TextChat = (props: PropType) => {
-  const { userIdSession, user, chat, friend, mainRef, handleDeleteChatById } =
+  const { userIdSession, chat, friend, mainRef, handleDeleteChatById } =
     props;
 
-  // const { data: session }: any = useSession();
-  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
+  const { user } = useAuthStore((state) => state);
 
-  const socket = useSocketStore((state) => {
-    return state.socket;
-  });
-
-  const updateChats = useFriendStore((state) => {
-    return state.updateChats;
-  });
 
   return (
     <div
@@ -47,12 +37,12 @@ const TextChat = (props: PropType) => {
               hover:bg-secondary-white dark:hover:bg-primary-gray"
     >
       <div className="flex items-center gap-3">
-        {/* <Avatar className="w-[40px] h-[40px]">
+        <Avatar className="w-[40px] h-[40px]">
           <AvatarImage src={`${user?.avatar}`} alt="avatar" />
           <AvatarFallback>
-            {user?.name && getSummaryName(user?.name)}
+            {user?.username && getSummaryName(user.username)}
           </AvatarFallback>
-        </Avatar> */}
+        </Avatar>
         {user?.avatar && user?.avatar !== null && (
           <div>
             <Image
@@ -67,13 +57,13 @@ const TextChat = (props: PropType) => {
         {user?.avatar === null && (
           <Avatar className="w-[40px] h-[40px]">
             <AvatarFallback>
-              {user?.name && getSummaryName(user?.name)}
+              {user?.username && getSummaryName(user.username)}
             </AvatarFallback>
           </Avatar>
         )}
         <div className="flex flex-col gap-2 text-[13px]">
           <div className="flex items-center gap-3">
-            <p className="font-bold">{`${user?.name} ${
+            <p className="font-bold">{`${user?.username} ${
               userIdSession === chat?.userId ? "(You)" : ""
             }`}</p>
             <p className="text-[12px] text-zinc-400">

@@ -8,7 +8,6 @@ import React, {
   useState,
 } from "react";
 import { useParams, usePathname } from "next/navigation";
-import { useServerStore, useSocketStore } from "@/lib/store";
 import { v4 as uuidv4 } from "uuid";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
@@ -33,16 +32,11 @@ import ImageChat from "../chat/ImageChat";
 import FileChat from "../chat/FileChat";
 
 import { IoMdNotifications } from "react-icons/io";
-
-import {
-  getAllChatsByChannelId,
-  getChannelById,
-  getDetailServerById,
-  getUserById,
-} from "@/utils/actions/api";
-import { formatDateStr, getSummaryName } from "@/lib/helper";
+import { useGetChannelsId } from "@/services/endpoints/channels/channels";
+import { useGetChatsChannelId, usePostChats } from "@/services/endpoints/chats/chats";
+import { useAuthStore } from "@/store/useAuthStore";
+import { handleFileUpload, handleFileExtUpload } from "@/lib/supabase";
 import { ApplicationFileType } from "@/lib/utils";
-import { handleFileExtUpload, handleFileUpload } from "@/utils/supabase";
 
 export interface FormDataState {
   message: string;
@@ -51,309 +45,70 @@ export interface FormDataState {
 const ChannelMainChat = () => {
   const params = useParams();
   const pathName = usePathname();
-  // const { data: session }: any = useSession();
-  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
+  // const { data: user }: any = useSession();
+  const user = useAuthStore((state) => state.user);
   const [formData, setFormData] = useState<FormDataState>({
     message: "",
   });
   const [screenHeight, setScreenHeight] = useState<any>(null);
   const [isOverFlow, setIsOverFlow] = useState<boolean>(false);
   const [noti, setNoti] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [chatsLoading, setChatsLoading] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
 
-  const socket = useSocketStore((state) => {
-    return state.socket;
+  // Get channelId from params
+  const channelId = params?.["channel-id"];
+  const channelIdNum = channelId && typeof channelId === "string" ? parseInt(channelId) : undefined;
+
+  // Fetch channel info
+  const { data: channel, isLoading: channelLoading } = useGetChannelsId(channelIdNum ?? 0, {
+    query: { enabled: !!channelIdNum }
   });
 
-  const server = useServerStore((state) => {
-    return state.server;
+  // Fetch chats for this channel
+  const { data: channelChats, isLoading: chatsLoading, refetch: refetchChats } = useGetChatsChannelId(channelIdNum ?? 0, {
+    query: { enabled: !!channelIdNum }
   });
 
-  const setServer = useServerStore((state) => {
-    return state.setServer;
-  });
-
-  const channel = useServerStore((state) => {
-    return state.channel;
-  });
-
-  const setChannel = useServerStore((state) => {
-    return state.setChannel;
-  });
-
-  const channelChats = useServerStore((state) => {
-    return state.channelChats;
-  });
-
-  const setChannelChats = useServerStore((state) => {
-    return state.setChannelChats;
-  });
-
-  const updateChannelChats = useServerStore((state) => {
-    return state.updateChannelChats;
-  });
-
-  const handleGetDetailServer = async () => {
-    if (params?.id && typeof params?.id === "string" && session?.user?.id) {
-      setLoading(true);
-      const res = await getDetailServerById(params?.id, session?.user?.id);
-
-      if (
-        res?.message === "Get detail server successfully" &&
-        res?.server !== null
-      ) {
-        setServer(res?.server);
-      }
-
-      setLoading(false);
-    }
-  };
-
-  const handleGetChannelProfile = async () => {
-    const channelId = params?.["channel-id"];
-
-    if (
-      session?.user?.id &&
-      channelId !== undefined &&
-      typeof channelId === "string"
-    ) {
-      const res = await getChannelById(session?.user?.id, channelId);
-      if (res?.message === "Get channel by id successfully") {
-        setChannel(res?.channel);
+  // Mutation for sending chat
+  const postChatMutation = usePostChats({
+    mutation: {
+      onSuccess: () => {
+        refetchChats();
+        setFormData({ message: "" });
+      },
+      onError: () => {
+        toast.error("Send message failed");
       }
     }
-  };
-
-  const handleGetAllChats = async () => {
-    const channelId = params?.["channel-id"];
-
-    if (
-      session?.user?.id &&
-      channelId !== undefined &&
-      typeof channelId === "string"
-    ) {
-      setChatsLoading(true);
-      const res = await getAllChatsByChannelId(session?.user?.id, channelId);
-      if (res?.message === "Get all chats by channel id successfully") {
-        updateChannelChats(res?.chats);
-      }
-      setChatsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    handleGetDetailServer();
-    handleGetChannelProfile();
-    handleGetAllChats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session]);
-
-  // Check screen height
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenHeight(window.innerHeight);
-    };
-
-    if (typeof window !== "undefined") {
-      setScreenHeight(window.innerHeight);
-
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }
-  }, []);
-
-  // Check chat box overflow
-  useEffect(() => {
-    if (
-      chatBoxRef?.current?.clientHeight &&
-      chatBoxRef?.current?.clientHeight > screenHeight - 210
-    )
-      setIsOverFlow(true);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatBoxRef?.current?.clientHeight]);
-
-  // Chat auto scroll effect
-  useEffect(() => {
-    if (channelChats !== undefined) {
-      if (channelChats?.length) {
-        containerRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-
-        mainRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelChats?.length]);
-
-  useEffect(() => {
-    mainRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [channelChats]);
-
-  useEffect(() => {
-    mainRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [loading]);
-
-  useEffect(() => {
-    if (
-      chatBoxRef?.current?.clientHeight &&
-      chatBoxRef?.current?.clientHeight < screenHeight - 210
-    )
-      setIsOverFlow(false);
-  }, [channelChats, screenHeight, params]);
-
-  useEffect(() => {
-    setIsOverFlow(false);
-  }, []);
-
-  // Receive direct message
-  useEffect(() => {
-    if (socket) {
-      socket.on(
-        "receive_channel_message",
-        (rs: {
-          message: string;
-          user: UserType;
-          chats: ChannelMessageChatType;
-        }) => {
-          // console.log("Receive channel message request:", rs);
-
-          const serverId = params?.["id"];
-          const channelId = params?.["channel-id"];
-          // const serverId = server?.id;
-          // const channelId = channel?.id;
-
-          if (
-            rs?.message === "You have new channel message" &&
-            rs?.chats &&
-            rs?.user &&
-            serverId &&
-            channelId
-          ) {
-            socket.emit(
-              "get_all_channel_chats",
-              {
-                userId: session?.user?.id,
-                serverId: serverId,
-                channelId: channelId,
-              },
-              (res: { message: string; chats: ChannelMessageChatType[] }) => {
-                // console.log("Check get all channel chats:", res);
-                if (res?.chats) updateChannelChats(res?.chats);
-              }
-            );
-          }
-        }
-      );
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
+  });
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const serverId = params?.id;
-    const channelId = params?.["channel-id"];
-
-    if (formData?.message === "") {
+    if (!formData.message) {
       toast.error("Message can not be empty");
       return;
     }
-
-    if (
-      socket &&
-      session?.user?.id &&
-      serverId !== "" &&
-      channelId !== "" &&
-      formData?.message !== ""
-    ) {
-      socket.emit(
-        "send_channel_message",
-        {
-          userId: session?.user?.id,
-          serverId: serverId,
-          channelId: channelId,
-          provider: "text",
+    if (channelIdNum && user?.id) {
+      postChatMutation.mutate({
+        data: {
+          channelId: channelIdNum,
           text: formData.message,
-        },
-        (res: {
-          message: string;
-          user: UserType;
-          chat: ChannelMessageChatType;
-        }) => {
-          if (res?.message === "Send channel message successfully") {
-            const newChat = { ...res?.chat, user: res?.user };
-            setChannelChats(newChat);
-          }
+          type: "channel"
         }
-      );
-
-      setFormData({
-        message: "",
       });
     }
   };
 
+  // TODO: Implement delete chat by id using react-query if API available
   const handleDeleteChatById = (chatId: string) => {
-    const serverId = params?.id;
-    const channelId = params?.["channel-id"];
-
-    if (
-      confirm("Do you want to delete this chat?") == true &&
-      socket &&
-      session?.user
-    ) {
-      socket.emit(
-        "delete_channel_chat_by_id",
-        {
-          chatId: chatId,
-          userId: session?.user?.id,
-          serverId: serverId,
-          channelId: channelId,
-        },
-        (res: { message: string; status: boolean }) => {
-          // console.log("Check delete chat by id:", res);
-          if (res?.status === true) {
-            toast.success(res?.message);
-            socket.emit(
-              "get_all_channel_chats",
-              {
-                userId: session?.user?.id,
-                serverId: serverId,
-                channelId: channelId,
-              },
-              (res: {
-                message: string;
-                user: UserType;
-                chats: DirectMessageChatType[];
-              }) => {
-                if (res?.chats) {
-                  console.log("GET ALL CHAT AFTER DELETE", res?.chats);
-                }
-              }
-            );
-          } else toast.error(res?.message);
-        }
-      );
-    }
+    toast.info("Delete chat feature not implemented in API");
   };
 
   // Direct file message selection
@@ -394,29 +149,29 @@ const ChannelMainChat = () => {
       // Create image url
       image = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${fullPath}`;
       // Create new image chat
-      if (socket && session?.user?.id && serverId !== "" && channelId !== "") {
-        socket.emit(
-          "send_channel_message",
-          {
-            userId: session?.user?.id,
-            serverId: serverId,
-            channelId: channelId,
-            provider: "image",
-            url: image,
-          },
-          (res: {
-            message: string;
-            user: UserType;
-            chat: ChannelMessageChatType;
-          }) => {
-            // console.log("Check send channel message:", res);
-            if (res?.message === "Send channel message successfully") {
-              const newChat = { ...res?.chat, user: res?.user };
-              setChannelChats(newChat);
-            }
-          }
-        );
-      }
+      // if (socket && user?.id && serverId !== "" && channelId !== "") {
+      //   socket.emit(
+      //     "send_channel_message",
+      //     {
+      //       userId: user?.id,
+      //       serverId: serverId,
+      //       channelId: channelId,
+      //       provider: "image",
+      //       url: image,
+      //     },
+      //     (res: {
+      //       message: string;
+      //       user: UserType;
+      //       chat: ChannelMessageChatType;
+      //     }) => {
+      //       // console.log("Check send channel message:", res);
+      //       if (res?.message === "Send channel message successfully") {
+      //         const newChat = { ...res?.chat, user: res };
+      //         setChannelChats(newChat);
+      //       }
+      //     }
+      //   );
+      // }
     } else if (
       fileName !== "" &&
       fileDbName !== "" &&
@@ -434,31 +189,31 @@ const ChannelMainChat = () => {
       // Create file url
       fileUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${fullPath}`;
       // Create new image chat
-      if (socket && session?.user?.id && serverId !== "" && channelId !== "") {
-        socket.emit(
-          "send_channel_message",
-          {
-            userId: session?.user?.id,
-            serverId: serverId,
-            channelId: channelId,
-            provider: "file",
-            url: fileUrl,
-            fileName: fileDbName,
-          },
-          (res: {
-            message: string;
-            user: UserType;
-            friend: UserType;
-            chat: DirectMessageChatType;
-          }) => {
-            // console.log("Check send direct message:", res);
-            if (res?.message === "Send channel message successfully") {
-              const newChat = { ...res?.chat, user: res?.user };
-              setChannelChats(newChat);
-            }
-          }
-        );
-      }
+      // if (socket && user?.id && serverId !== "" && channelId !== "") {
+      //   socket.emit(
+      //     "send_channel_message",
+      //     {
+      //       userId: user?.id,
+      //       serverId: serverId,
+      //       channelId: channelId,
+      //       provider: "file",
+      //       url: fileUrl,
+      //       fileName: fileDbName,
+      //     },
+      //     (res: {
+      //       message: string;
+      //       user: UserType;
+      //       friend: UserType;
+      //       chat: DirectMessageChatType;
+      //     }) => {
+      //       // console.log("Check send direct message:", res);
+      //       if (res?.message === "Send channel message successfully") {
+      //         const newChat = { ...res?.chat, user: res };
+      //         setChannelChats(newChat);
+      //       }
+      //     }
+      //   );
+      // }
     } else toast.error("File format not correct");
 
     setLoading(false);
@@ -509,7 +264,7 @@ const ChannelMainChat = () => {
         <div className="flex items-center gap-3">
           <p className="text-[25px] font-bold dark:text-gray-400">#</p>
           <p className="text-[13px] font-bold dark:text-gray-400">
-            {channel?.name}
+            {channel?.data?.name}
           </p>
         </div>
         <div className="flex items-center gap-5">
@@ -534,103 +289,71 @@ const ChannelMainChat = () => {
         }`}
       >
         <div ref={chatBoxRef} className="w-[100%] flex flex-col gap-8">
-          {/* {channel !== null && (
-            <div className="flex flex-col gap-3">
-              <Avatar className="w-[70px] h-[70px]">
-                <AvatarImage src={`${channel?.avatar}`} alt="avatar" />
-                <AvatarFallback className="text-[30px]">
-                  {channel?.name && getSummaryName(channel?.name)}
-                </AvatarFallback>
-              </Avatar>
-              <p className="font-bold text-xl">{friend?.name}</p>
-              <p className="font-semibold text-sm">{friend?.email}</p>
-              <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
-                This is the beginning of your direct message history with{" "}
-                {friend?.name}
-              </p>
-              <div className="relative w-[100%] h-[1px] bg-primary-white dark:bg-zinc-400 my-5">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-[13px] text-zinc-500 dark:text-zinc-400 bg-white dark:bg-secondary-gray p-1">
-                    {chats?.length !== 0 &&
-                      chats[0]?.sended !== undefined &&
-                      formatDateStr(chats[0]?.sended)}
-                    {chats?.length === 0 &&
-                      formatDateStr(new Date().toString())}
-                  </div>
-                </div>
+          {chatsLoading ? (
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-12 w-12 rounded-full bg-zinc-300" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-[250px] bg-zinc-300" />
+                <Skeleton className="h-4 w-[200px] bg-zinc-300" />
               </div>
             </div>
-          )} */}
-          {channelChats?.map((chat: ChannelMessageChatType) => {
-            if (chatsLoading) {
-              return (
-                <div key={uuidv4()} className="flex items-center space-x-4">
-                  <Skeleton className="h-12 w-12 rounded-full bg-zinc-300" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-[250px] bg-zinc-300" />
-                    <Skeleton className="h-4 w-[200px] bg-zinc-300" />
+          ) : (
+            channelChats?.data?.map((chat: any) => {
+              if (!chat) {
+                return (
+                  <div key={uuidv4()}>
+                    <p>Chat is not available</p>
                   </div>
-                </div>
-              );
-            }
-
-            if (!chatsLoading && chat?.user === null) {
-              return (
-                <div key={uuidv4()}>
-                  <p>Chat is not available</p>
-                </div>
-              );
-            }
-
-            if (chat?.user !== null && chat?.provider === "text") {
-              return (
-                <TextChat
-                  key={uuidv4()}
-                  userIdSession={session?.user?.id}
-                  user={chat?.user}
-                  chat={chat}
-                  friend={chat?.user}
-                  mainRef={mainRef}
-                  handleDeleteChatById={handleDeleteChatById}
-                />
-              );
-            }
-
-            if (chat?.user !== null && chat?.provider === "image") {
-              return (
-                <ImageChat
-                  key={uuidv4()}
-                  userIdSession={session?.user?.id}
-                  user={chat?.user}
-                  chat={chat}
-                  friend={chat?.user}
-                  mainRef={mainRef}
-                  handleDeleteChatById={handleDeleteChatById}
-                  handleDownloadFile={handleDownloadFile}
-                />
-              );
-            }
-
-            if (chat?.user !== null && chat?.provider === "file") {
-              return (
-                <FileChat
-                  key={uuidv4()}
-                  userIdSession={session?.user?.id}
-                  user={chat?.user}
-                  chat={chat}
-                  friend={chat?.user}
-                  mainRef={mainRef}
-                  handleDeleteChatById={handleDeleteChatById}
-                  handleDownloadFile={handleDownloadFile}
-                />
-              );
-            }
-          })}
+                );
+              }
+              if (chat?.provider === "text") {
+                return (
+                  <TextChat
+                    key={uuidv4()}
+                    userIdSession={user?.id.toString() || ""}
+                    chat={chat}
+                    friend={chat}
+                    mainRef={mainRef}
+                    handleDeleteChatById={handleDeleteChatById}
+                  />
+                );
+              }
+              if (chat?.provider === "image") {
+                return (
+                  <ImageChat
+                    key={uuidv4()}
+                    userIdSession={user?.id.toString() || ""}
+                    user={chat}
+                    chat={chat}
+                    friend={chat}
+                    mainRef={mainRef}
+                    handleDeleteChatById={handleDeleteChatById}
+                    handleDownloadFile={handleDownloadFile}
+                  />
+                );
+              }
+              if (chat?.provider === "file") {
+                return (
+                  <FileChat
+                    key={uuidv4()}
+                    userIdSession={user?.id.toString() || ""}
+                    user={chat}
+                    chat={chat}
+                    friend={chat}
+                    mainRef={mainRef}
+                    handleDeleteChatById={handleDeleteChatById}
+                    handleDownloadFile={handleDownloadFile}
+                  />
+                );
+              }
+              return null;
+            })
+          )}
         </div>
       </div>
       <div className="absolute w-[100%] h-[100px] bottom-0 px-6 py-4">
         <ServerChatInput
-          channelName={channel?.name ? channel?.name : "undefined"}
+          channelName={channel?.data?.name ? channel.data.name : "undefined"}
           handleSendMessage={handleSendMessage}
           formData={formData}
           setFormData={setFormData}

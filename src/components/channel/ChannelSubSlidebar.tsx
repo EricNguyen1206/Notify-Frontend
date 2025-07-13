@@ -11,7 +11,7 @@ import { IoIosLogOut } from "react-icons/io";
 import { Skeleton } from "@/components/ui/skeleton";
 import UserProfile from "../UserProfile";
 import ServerDropdownMenu from "./ChannelDropdownMenu";
-import ServerCategoryItem from "./ChannelCategoryItem";
+import ChannelCategoryItem from "./ChannelCategoryItem";
 import CreateNewCategoryBtn from "./CreateNewCategoryBtn";
 
 import { CategoryType, ChannelType } from "@/types";
@@ -295,7 +295,7 @@ const ServerSubSlidebar = () => {
           {categories?.map((category: CategoryType) => {
             if (category?.serverId === serverId)
               return (
-                <ServerCategoryItem key={category?.id} category={category} />
+                <ChannelCategoryItem key={category?.id} category={category} />
               );
           })}
         </div>
