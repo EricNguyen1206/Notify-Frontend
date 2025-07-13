@@ -5,57 +5,48 @@ type User = {
   id: number
   email: string
   username: string
+  avatar?: string
 }
 
 interface AuthState {
   user: User | null
-  token: string | null
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
+  token: string | null
   logout: () => void
-  fetchProfile: () => Promise<void>
-  setToken: (token: string) => void
   setUser: (user: User) => void
   setIsAuthenticated: (isAuthenticated: boolean) => void
+  setToken: (token: string) => void
+  clearAuth: () => void
+  getTokenFromCookie: () => string | null
 }
-
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
-      token: null,
       isAuthenticated: false,
+      token: null,
 
-      login: async (email: string, password: string) => {
-        const res = await fetch('/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        })
-        const data = await res.json()
-        if (res.ok) {
-          set({ token: data.token, isAuthenticated: true })
-          await useAuthStore.getState().fetchProfile()
-        }
+      logout: () => {
+        // Clear cookie
+        document.cookie = 'token=; path=/; max-age=0'
+        set({ user: null, isAuthenticated: false, token: null })
       },
 
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
-
-      fetchProfile: async () => {
-        const { token } = useAuthStore.getState()
-        const res = await fetch('/users/profile', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        const user = await res.json()
-        if (res.ok) set({ user })
-      },
-
-      setToken: (token: string) => set({ token }),
       setUser: (user: User) => set({ user }),
       setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
+      setToken: (token: string) => set({ token }),
+      clearAuth: () => set({ user: null, isAuthenticated: false, token: null }),
+      
+      getTokenFromCookie: () => {
+        if (typeof document === 'undefined') return null
+        const cookies = document.cookie.split(';')
+        const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='))
+        return tokenCookie ? tokenCookie.split('=')[1] : null
+      },
     }),
     {
       name: 'auth-storage', // localStorage key
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     }
   )
 )

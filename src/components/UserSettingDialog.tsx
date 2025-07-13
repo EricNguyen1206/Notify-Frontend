@@ -3,8 +3,9 @@
 import React, { ReactNode, useRef, useState } from "react";
 
 // import { handleSignOut } from "@/lib/action";
-import { editUserByUserId, getUserByEmail } from "@/utils/actions/api";
+// import { editUserByUserId } from "@/utils/actions/api";
 import { censorPassword, getSummaryName } from "@/lib/helper";
+import { useAuthStore } from "@/store/useAuthStore";
 
 import { IoIosLogOut } from "react-icons/io";
 
@@ -16,18 +17,16 @@ import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
-import { handleFileUpload } from "@/utils/supabase";
+import { handleFileUpload } from "@/lib/supabase";
 
 type ParentComponentProps = {
   children: ReactNode;
 };
 
 const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
-  // const { data: session, update }: any = useSession();
-  const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com", mute: false, deafen: false, avatar: "https://i.pravatar.cc/150?img=1", provider: "email", password: "password"}}
-  const update = () => {
-    console.log("update");
-  }
+  const profile = useAuthStore((state) => state.user);
+
+  const user = useAuthStore((state) => state.user);
 
   const [formData, setFormData] = useState<any>({
     id: "",
@@ -50,7 +49,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
     let checkEdit = false;
 
     const editUser: any = {
-      id: session?.user?.id,
+      id: profile?.id,
     };
 
     // Check edit avatar
@@ -86,21 +85,14 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
 
     setLoading(true);
 
-    const res = await editUserByUserId(editUser);
+    // const res = await editUserByUserId(editUser);
     // console.log(res);
-    const { message } = res;
+    // const { message } = res;
+    const message = "" + "1";
 
     if (message === "Edit user successfully")
       toast.success("Edit user successfully");
     else toast.error("Edit user failed");
-
-    // Update session
-    const profile = await getUserByEmail(session?.user?.email);
-
-    // await update({
-    //   ...session,
-    //   user: profile?.user,
-    // });
 
     setLoading(false);
     avatarRef.current.value = null;
@@ -142,20 +134,20 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                   <div className="flex gap-5 items-center">
                     <Avatar className="w-[100px] h-[100px]">
                       <AvatarImage
-                        src={`${session?.user?.avatar}`}
+                        src={`${profile?.avatar}`}
                         alt="avatar"
                       />
                       <AvatarFallback className="text-[40px]">
-                        {session?.user?.name &&
-                          getSummaryName(session?.user?.name)}
+                        {profile?.username &&
+                          getSummaryName(profile?.username)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col gap-1">
                       <p className="text-[20px] font-bold">
-                        {session?.user?.name}
+                        {profile?.username}
                       </p>
                       <p className="text-zinc-500 dark:text-zinc-400 text-[13px] font-semibold">
-                        {session?.user?.email}
+                        {profile?.email}
                       </p>
                     </div>
                   </div>
@@ -180,7 +172,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                     <div className="flex flex-col gap-2 text-[15px]">
                       <p className="font-black dark:text-zinc-400">USER ID</p>
                       <p className="truncate max-w-[200px] md:max-w-[500px]">
-                        {session?.user?.id}
+                        {profile?.id}
                       </p>
                     </div>
                     <Button variant="purple" disabled>
@@ -195,8 +187,8 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                       <Input
                         className="w-[200px] md:w-[600px]"
                         type="text"
-                        placeholder={`${session?.user?.name}`}
-                        value={formData.name}
+                        placeholder={`${profile?.username}`}
+                        value={formData.username}
                         onChange={(e) =>
                           setFormData({ ...formData, name: e.target.value })
                         }
@@ -214,7 +206,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                     <div className="flex flex-col gap-2 text-[15px]">
                       <p className="font-black dark:text-zinc-400">PROVIDER</p>
                       <p className="truncate max-w-[200px] md:max-w-[500px]">
-                        {session?.user?.provider}
+                        provider
                       </p>
                     </div>
                     <Button variant="purple" disabled>
@@ -234,7 +226,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                         }
                       />
                     </div>
-                    {session?.user?.provider === "email" ? (
+                    {/* {profile?.provider === "email" ? ( */}
                       <Button
                         variant="purple"
                         type="submit"
@@ -242,11 +234,11 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                       >
                         {loading ? "Loading..." : "Edit"}
                       </Button>
-                    ) : (
+                    {/* ) : (
                       <Button variant="purple" type="submit" disabled>
                         Edit
                       </Button>
-                    )}
+                    )} */}
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex flex-col gap-2 text-[15px]">
@@ -255,12 +247,12 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                         className="w-[200px] md:w-[600px]"
                         type="password"
                         disabled={
-                          session?.user?.password === null ? true : false
+                          true //profile?.password === null ? true : false
                         }
-                        placeholder={`${
-                          session?.user?.password === null
-                            ? "Password is not available"
-                            : censorPassword(session?.user?.password)
+                        placeholder={`${ "Password is not available"
+                          // profile?.password === null
+                          //   ? "Password is not available"
+                          //   : censorPassword(profile?.password)
                         }`}
                         value={formData.password}
                         onChange={(e) =>
@@ -268,11 +260,11 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                         }
                       />
                     </div>
-                    {session?.user?.password === null ? (
+                    {/* {profile?.password === null ? (
                       <Button variant="purple" type="submit" disabled>
                         Edit
                       </Button>
-                    ) : (
+                    ) : ( */}
                       <Button
                         variant="purple"
                         type="submit"
@@ -280,7 +272,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                       >
                         {loading ? "Loading..." : "Edit"}
                       </Button>
-                    )}
+                    {/* )} */}
                   </div>
                 </form>
               </div>

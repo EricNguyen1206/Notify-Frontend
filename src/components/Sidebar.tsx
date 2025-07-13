@@ -4,9 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useParams } from "next/navigation";
 
-import { AiOutlineShop } from "react-icons/ai";
-import { IoMdAdd } from "react-icons/io";
-import { MdClear } from "react-icons/md";
 import UserProfile from "./UserProfile";
 import {
   Tooltip,
@@ -20,12 +17,17 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useChannelStore } from "@/store/useChannelStore";
 import { useGetChannels } from "@/services/endpoints/channels/channels";
 import { ModelsChannelListResponse } from "@/services/schemas";
+import { Plus , Tv } from "lucide-react";
+import CreateNewChannelDialog from "./channel/CreateNewChannelDialog";
 
 const Subslidebar = () => {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const channelId = Number(params.id)
-  const category = usePathname().split("/dashboard/")[1];
+  const pathname = usePathname();
+
+  const [openCreateChannel, setOpenCreateChannel] = useState<boolean>(false);
+
 
   /** -------------------- GLOBAL STATE -------------------- */
   const { user } = useAuthStore()
@@ -90,9 +92,9 @@ const Subslidebar = () => {
   /** -------------------- LIFE CIRCLE -------------------- */
 
   useEffect(() => {
-    if (channelsData && Array.isArray(channelsData)) {
+    if (channelsData?.data && Array.isArray(channelsData.data)) {
       setChannels(
-        channelsData.map((ch: ModelsChannelListResponse) => ({
+        channelsData.data.map((ch: ModelsChannelListResponse) => ({
           id: ch.id ?? 0,
           name: ch.name ?? "",
           ownerId: ch.ownerId ?? 0,
@@ -158,27 +160,61 @@ const Subslidebar = () => {
           placeholder="Find or start a conversation"
         />
       </div>
+      <div className="w-[100%] mt-2 flex items-center justify-between px-6 text-[12px] dark:text-gray-400 font-bold hover:dark:text-gray-300">
+        <p>CHANNELS</p>
+        <div className="text-xs text-gray-500">
+          {isChannelsLoading ? "Loading..." : 
+            <button className="dark:hover:text-white p-[6px] rounded-md
+                        hover:bg-secondary-white hover:text-primary-gray
+                        dark:hover:bg-secondary-gray">
+              <CreateNewChannelDialog
+                  openCreateChannel={openCreateChannel}
+                  setOpenCreateChannel={setOpenCreateChannel}
+                >
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Plus size={20} />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Create Channel</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CreateNewChannelDialog>
+            </button>
+          }
+        </div>
+      </div>
       <div className="flex flex-col gap-1 p-3">
-        {channels.map((item) => {
-          return (
-            // <Link key={item.name} href={item.url}>
-            <div
-              key={item.name}
-              onClick={() => handleJoinChannel(item.id)}
-              className={`px-2 py-3 rounded-md text-[14px] flex items-center gap-5
-                            text-zinc-500 hover:bg-zinc-300 hover:text-primary-black
-                            dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${category !== undefined &&
-                !category.includes("/messages") &&
-                category?.includes(item.name.toLowerCase()) &&
-                "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
-                }`}
-            >
-              <AiOutlineShop size={25} />
-              <p>{item.name}</p>
-            </div>
-            // </Link>
-          );
-        })}
+        {isChannelsLoading ? (
+          <div className="text-center text-gray-500 py-4">Loading channels...</div>
+        ) : channelsError ? (
+          <div className="text-center text-red-500 py-4">Error loading channels</div>
+        ) : channels.length === 0 ? (
+          <div className="text-center text-gray-500 py-4">No channels found</div>
+        ) : (
+          channels.map((item) => {
+            return (
+              // <Link key={item.name} href={item.url}>
+              <div
+                key={item.name}
+                onClick={() => handleJoinChannel(item.id)}
+                className={`px-2 py-3 rounded-md text-[14px] flex items-center gap-5 cursor-pointer
+                              text-zinc-500 hover:bg-zinc-300 hover:text-primary-black
+                              dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${
+                                channelId === item.id
+                                  ? "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
+                                  : ""
+                              }`}
+              >
+                <Tv />
+                <p>{item.name}</p>
+              </div>
+              // </Link>
+            );
+          })
+        )}
       </div>
       {/* <div
         className="w-[100%] mt-5 overflow-y-auto flex items-center justify-between px-6 text-[12px] dark:text-gray-400 font-bold hover:dark:text-gray-300"

@@ -1,5 +1,5 @@
 import { Dispatch, FormEvent, SetStateAction, useState } from "react";
-import { useServerStore, useSocketStore } from "@/lib/store";
+// import { useServerStore } from "@/lib/store";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -15,100 +15,59 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-import { HiSpeakerWave } from "react-icons/hi2";
+import { CategoryType } from "@/types";
 
-import { CategoryType, ChannelType } from "@/types";
+import { usePostChannels } from "@/services/endpoints/channels/channels";
+import { PostChannelsBody } from "@/services/schemas";
+import { useAuthStore } from "@/store/useAuthStore";
 
-interface PropType {
-  category: CategoryType;
+interface CreateNewChannelDialogProps {
   openCreateChannel: boolean;
   setOpenCreateChannel: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
 }
 
-interface FormDataState {
-  name: string;
-  type: string;
-}
+const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
+  const { openCreateChannel, setOpenCreateChannel, children } = props;
+  const {user} = useAuthStore((state) => state);
 
-const CreateNewChannelBtn = (props: PropType) => {
-  const { category, openCreateChannel, setOpenCreateChannel, children } = props;
-
-  const [formData, setFormData] = useState<FormDataState>({
+  const initForm: PostChannelsBody = {
     name: "",
-    type: "text",
-  });
+    ownerId: user?.id || 0,
+    }
+  const [formData, setFormData] = useState<PostChannelsBody>(initForm);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const socket = useSocketStore((state) => {
-    return state.socket;
-  });
 
-  const server = useServerStore((state) => {
-    return state.server;
-  });
 
-  const updateCategories = useServerStore((state) => {
-    return state.updateCategories;
+  const postChannelMutation = usePostChannels({
+    mutation: {
+      onSuccess: (data) => {
+        toast.success("Create new channel successfully");
+        // Optionally, refetch channels or update state here
+        setOpenCreateChannel(false);
+        setFormData(initForm);
+        setLoading(false);
+      },
+      onError: () => {
+        toast.error("Create channel failed");
+        setLoading(false);
+      }
+    }
   });
 
   const handleCreateNewChannel = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (formData.name === "") toast.error("Please type channel name");
-
-    if (socket && server) {
-      const newChannel = {
-        serverId: server?.id,
-        categoryId: category?.id,
-        name: formData.name,
-        type: formData.type,
-      };
-
-      // Send event to server
-      setLoading(true);
-
-      socket.emit(
-        "create_new_channel",
-        {
-          serverId: newChannel?.serverId,
-          categoryId: newChannel?.categoryId,
-          name: newChannel?.name,
-          type: newChannel?.type,
-        },
-        (res: { message: string; channel: ChannelType }) => {
-          //   console.log("CHECK CREATE NEW CHANNEL", res);
-          if (res?.message === "Create new channel successfully") {
-            toast.success(res?.message);
-
-            socket.emit(
-              "get_all_categories_by_server_id",
-              {
-                serverId: server?.id,
-              },
-              (res: { message: string; categories: CategoryType[] }) => {
-                if (
-                  res?.message ===
-                  "Get all categories by server id successfully"
-                ) {
-                  updateCategories(res?.categories);
-                }
-              }
-            );
-          }
-        }
-      );
-
-      setLoading(false);
+    if (formData.name === "") {
+      toast.error("Please type channel name");
+      return;
     }
-
-    setFormData({
-      name: "",
-      type: "text",
+    setLoading(true);
+    postChannelMutation.mutate({
+      data: formData
     });
-    setOpenCreateChannel(false);
   };
 
   return (
@@ -119,7 +78,6 @@ const CreateNewChannelBtn = (props: PropType) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create Channel</DialogTitle>
-          <DialogDescription>in {category?.name}</DialogDescription>
         </DialogHeader>
         <form
           className="flex flex-col gap-8"
@@ -141,7 +99,7 @@ const CreateNewChannelBtn = (props: PropType) => {
               }}
             />
           </div>
-          <div className="flex flex-col gap-3">
+          {/* <div className="flex flex-col gap-3">
             <Label htmlFor="type" className="text-[12px] font-bold text-left">
               CHANNEL TYPE
             </Label>
@@ -179,7 +137,7 @@ const CreateNewChannelBtn = (props: PropType) => {
                 </Label>
               </div>
             </RadioGroup>
-          </div>
+          </div> */}
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
@@ -200,4 +158,4 @@ const CreateNewChannelBtn = (props: PropType) => {
   );
 };
 
-export default CreateNewChannelBtn;
+export default CreateNewChannelDialog;

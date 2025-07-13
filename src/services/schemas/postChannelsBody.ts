@@ -3,4 +3,4 @@
  * Do not edit manually.
  */
 
-export type PostChannelsBody = {[key: string]: string};
+export type PostChannelsBody = {name: string, ownerId: number};

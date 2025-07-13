@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useServerStore } from "@/lib/store";
 
 import {
   Accordion,
@@ -24,10 +23,12 @@ import { MdAdd } from "react-icons/md";
 
 import { CategoryType, ChannelType } from "@/types";
 
-import CreateNewChannelBtn from "./CreateNewChannelBtn";
+import CreateNewChannelDialog from "./CreateNewChannelDialog";
 import DeleteChannelContext from "./DeleteChannelContext";
 import DeleteCategoryContext from "./DeleteCategoryContext";
 import InviteDialog from "./InviteDialog";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useChannelStore } from "@/store/useChannelStore";
 
 interface PropType {
   category: CategoryType;
@@ -38,6 +39,8 @@ const ServerCategoryItem = (props: PropType) => {
 
   // const { data: session }: any = useSession();
   const session = {user: {id: "123", name: "John Doe", email: "john.doe@example.com"}}
+  const { user } = useAuthStore((state) => state);
+  const { channels, setChannels } = useChannelStore((state) => state);
 
   const params = useParams();
   const serverId = params?.id;
@@ -87,9 +90,7 @@ const ServerCategoryItem = (props: PropType) => {
           <DeleteCategoryContext category={category}>
             <div className="w-[200px] flex items-center justify-between">
               <p className="pl-2 max-w-[180px] truncate">{category?.name}</p>
-              {server && server?.owner?.id === session?.user?.id && (
-                <CreateNewChannelBtn
-                  category={category}
+                <CreateNewChannelDialog
                   openCreateChannel={openCreateChannel}
                   setOpenCreateChannel={setOpenCreateChannel}
                 >
@@ -105,8 +106,7 @@ const ServerCategoryItem = (props: PropType) => {
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                </CreateNewChannelBtn>
-              )}
+                </CreateNewChannelDialog>
             </div>
           </DeleteCategoryContext>
         </AccordionTrigger>
