@@ -17,15 +17,15 @@ import { getSummaryName, formatDateStr } from "@/lib/helper";
 import { useAuthStore } from "@/store/useAuthStore";
 
 interface PropType {
-  userIdSession: string;
+  userIdSession: number;
   chat: DirectMessageChatType;
   friend?: UserType;
   mainRef: React.RefObject<HTMLDivElement>;
-  handleDeleteChatById: (chatId: string) => void;
+  handleDeleteChatById: (chatId: number) => void;
 }
 
 const TextChat = (props: PropType) => {
-  const { userIdSession, chat, friend, mainRef, handleDeleteChatById } =
+  const { userIdSession, chat, mainRef, handleDeleteChatById } =
     props;
 
   const { user } = useAuthStore((state) => state);

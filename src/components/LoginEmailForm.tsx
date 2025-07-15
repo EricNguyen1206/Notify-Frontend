@@ -28,6 +28,14 @@ const LoginEmailForm = () => {
           // Store token in cookie
           document.cookie = `token=${token}; path=/; max-age=${60 * 60}; samesite=lax${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
           
+          // Store user data in cookie (as JSON string, encode to avoid issues)
+          const userCookie = encodeURIComponent(JSON.stringify({
+            id: user.id,
+            email: user.email,
+            username: user.username || ''
+          }));
+          document.cookie = `user=${userCookie}; path=/; max-age=${60 * 60}; samesite=lax${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
+
           // Update Zustand state
           setToken(token);
           setUser({

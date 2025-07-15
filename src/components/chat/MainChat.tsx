@@ -36,6 +36,7 @@ import { useGetUsersProfile } from "@/services/endpoints/users/users";
 import { useGetChatsChannelId } from "@/services/endpoints/chats/chats";
 import { handleFileExtUpload, handleFileUpload } from "@/lib/supabase";
 import { ModelsChatResponse } from "@/services/schemas";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export interface FormDataState {
   message: string;
@@ -45,14 +46,7 @@ const MainChat = () => {
   const params = useParams();
 
   // Get current user profile
-  const { data: userData } = useGetUsersProfile();
-  const sessionUser = userData
-    ? {
-        id: String(userData.id ?? ""),
-        name: userData.username ?? "",
-        email: userData.email ?? "",
-      }
-    : undefined;
+  const sessionUser = useAuthStore((state) => state.user);
 
   // Get channelId from params (as number)
   const channelId = params?.id?.[0] ? Number(params.id[0]) : undefined;
@@ -65,11 +59,11 @@ const MainChat = () => {
   } = useGetChatsChannelId(channelId ?? 0, { query: { enabled: !!channelId } });
 
   // Map API response to DirectMessageChatType[]
-  const chats: DirectMessageChatType[] = Array.isArray(chatsData)
-    ? chatsData.map((chat: ModelsChatResponse) => ({
-        id: String(chat.id ?? ""),
+  const chats: DirectMessageChatType[] = Array.isArray(chatsData?.data)
+    ? chatsData.data.map((chat: ModelsChatResponse) => ({
+        id: chat.id!,
         user: {}, // You may want to fetch user details if needed
-        userId: String(chat.senderId ?? ""),
+        userId: chat.senderId ?? 0,
         friendId: String(chat.receiverId ?? ""),
         text: chat.text ?? "",
         type: chat.type ?? "",
@@ -83,7 +77,7 @@ const MainChat = () => {
   const [formData, setFormData] = useState<FormDataState>({
     message: "",
   });
-  const [screenHeight, setScreenHeight] = useState(window.innerHeight);
+  const [screenHeight, setScreenHeight] = useState(720);
   const [isOverFlow, setIsOverFlow] = useState<boolean>(false);
   const [noti, setNoti] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
@@ -167,18 +161,12 @@ const MainChat = () => {
       return;
     }
     if (socket && sessionUser?.id && formData?.message !== "" && fileName === "") {
-      socket.emit(
-        "send_channel_message",
-        {
-          userId: sessionUser?.id,
-          channelId: channelId,
-          provider: "text",
-          text: formData.message,
-        },
-        (res: any) => {
-          // Optionally handle response
-        }
-      );
+      const msg = {
+        action: "message",
+        channelId: String(channelId),
+        text: formData.message,
+      };
+      socket.send(JSON.stringify(msg));
       setFormData({ message: "" });
     }
   };
@@ -213,45 +201,16 @@ const MainChat = () => {
                 </div>
               );
             }
-            if (chat?.provider === "text") {
+            // if (chat?.provider === "text") {
               return (
                 <TextChat
                   key={uuidv4()}
-                  userIdSession={sessionUser?.id ?? ""}
-                  user={sessionUser ?? {}}
+                  userIdSession={sessionUser?.id!}
                   chat={chat}
                   mainRef={mainRef}
                   handleDeleteChatById={() => {}}
                 />
               );
-            }
-            if (chat?.provider === "image") {
-              return (
-                <ImageChat
-                  key={uuidv4()}
-                  userIdSession={sessionUser?.id ?? ""}
-                  user={sessionUser ?? {}}
-                  chat={chat}
-                  mainRef={mainRef}
-                  handleDeleteChatById={() => {}}
-                  handleDownloadFile={() => {}}
-                />
-              );
-            }
-            if (chat?.provider === "file") {
-              return (
-                <FileChat
-                  key={uuidv4()}
-                  userIdSession={sessionUser?.id ?? ""}
-                  user={sessionUser ?? {}}
-                  chat={chat}
-                  mainRef={mainRef}
-                  handleDeleteChatById={() => {}}
-                  handleDownloadFile={() => {}}
-                />
-              );
-            }
-            return null;
           })}
         </div>
       </div>

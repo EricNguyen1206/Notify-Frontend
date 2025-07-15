@@ -35,7 +35,12 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user: User) => set({ user }),
       setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
       setToken: (token: string) => set({ token }),
-      clearAuth: () => set({ user: null, isAuthenticated: false, token: null }),
+      clearAuth: () => {
+        // Clear cookie
+        document.cookie = 'token=; path=/; max-age=0'
+        // Reset Zustand state
+        set({ user: null, isAuthenticated: false, token: null })
+      },
       
       getTokenFromCookie: () => {
         if (typeof document === 'undefined') return null

@@ -16,14 +16,14 @@ import { IoMdDownload } from "react-icons/io";
 import { DirectMessageChatType, UserType } from "@/types";
 
 import { formatDateStr, getSummaryName } from "@/lib/helper";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface PropType {
-  userIdSession: string;
-  user: UserType;
+  userIdSession: number;
   chat: DirectMessageChatType;
   friend?: UserType;
   mainRef: React.RefObject<HTMLDivElement>;
-  handleDeleteChatById: (chatId: string) => void;
+  handleDeleteChatById: (chatId: number) => void;
   handleDownloadFile: (
     bucket: string,
     folderName: string,
@@ -32,9 +32,9 @@ interface PropType {
 }
 
 const ImageChat = (props: PropType) => {
+  const { user } = useAuthStore((state) => state);
   const {
     userIdSession,
-    user,
     chat,
     friend,
     mainRef,
@@ -62,14 +62,14 @@ const ImageChat = (props: PropType) => {
         {user?.avatar === null && (
           <Avatar className="w-[40px] h-[40px]">
             <AvatarFallback>
-              {user?.name && getSummaryName(user?.name)}
+              {user?.username && getSummaryName(user?.username)}
             </AvatarFallback>
           </Avatar>
         )}
         <div className="flex flex-col gap-3">
           <div className="flex flex-col text-[13px]">
             <div className="flex items-center gap-3">
-              <p className="font-bold">{`${user?.name} ${
+              <p className="font-bold">{`${user?.username} ${
                 userIdSession === chat?.userId ? "(You)" : ""
               }`}</p>
               <p className="text-[12px] text-zinc-400">
@@ -79,7 +79,7 @@ const ImageChat = (props: PropType) => {
             {user?.avatar === null && (
               <Avatar className="w-[40px] h-[40px]">
                 <AvatarFallback>
-                  {user?.name && getSummaryName(user?.name)}
+                  {user?.username && getSummaryName(user?.username)}
                 </AvatarFallback>
               </Avatar>
             )}

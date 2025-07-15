@@ -18,9 +18,9 @@ export interface UserType {
 }
 
 export interface DirectMessageChatType {
-  id?: string;
+  id?: number;
   user: UserType | any;
-  userId?: string;
+  userId?: number;
   friendId?: string;
   text: string;
   type?: string;
@@ -42,13 +42,11 @@ export interface ChannelType {
   id: string;
   name: string;
   type: 'text' | 'voice';
-  serverId: string;
 }
 
 export interface ChannelMessageChatType {
   id?: string;
   user: UserType | any;
-  serverId?: string;
   channelId?: string;
   text: string;
   type?: string;
