@@ -19,12 +19,12 @@ import { DirectMessageChatType, UserType } from "@/types";
 import { formatDateStr, getSummaryName } from "@/lib/helper";
 
 interface PropType {
-  userIdSession: string;
+  userIdSession: number;
   user: UserType;
   chat: DirectMessageChatType;
   friend?: UserType;
   mainRef: React.RefObject<HTMLDivElement>;
-  handleDeleteChatById: (chatId: string) => void;
+  handleDeleteChatById: (chatId: number) => void;
   handleDownloadFile: (
     bucket: string,
     folderName: string,

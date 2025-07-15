@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { handleFileUpload } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 type ParentComponentProps = {
   children: ReactNode;
@@ -25,8 +26,9 @@ type ParentComponentProps = {
 
 const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
   const profile = useAuthStore((state) => state.user);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
-  const user = useAuthStore((state) => state.user);
+  const router = useRouter();
 
   const [formData, setFormData] = useState<any>({
     id: "",
@@ -38,6 +40,12 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [image, setImage] = useState<any>(null);
   const avatarRef = useRef<any>(null);
+
+  const handleSignOut = () => {
+    clearAuth();
+    toast.success("Sign out successfully");
+    router.replace("/login");
+  };
 
   const handleImageSelection = (event: any) => {
     setImage(event.target.files[0]);
@@ -112,14 +120,12 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
       <DialogContent className="bg-secondary-white dark:bg-primary-gray max-w-[100vw] h-[100vh]">
         <div className="absolute right-[50px] top-[10px] flex items-center gap-3">
           <ThemeToggle />
-          {/* <Button
+          <Button
             variant="purple"
-            onClick={() => {
-              handleSignOut();
-            }}
+            onClick={handleSignOut}
           >
             Log Out
-          </Button> */}
+          </Button>
         </div>
         <Tabs>
           <TabList>
@@ -156,7 +162,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                       className="flex items-center gap-2"
                       variant="destructive"
                       onClick={() => {
-                        // handleSignOut();
+                        handleSignOut();
                       }}
                     >
                       <IoIosLogOut size={20} />

@@ -48,44 +48,31 @@ const Subslidebar = () => {
 
 
   const handleJoinChannel = async (id: number) => {
-    if (id != channelId && user) {
-
+    if (id !== channelId && user) {
+      if (socket) {
+        const joinMsg = {
+          action: "join",
+          channelId: String(id),
+        };
+        socket.send(JSON.stringify(joinMsg));
+      }
       router.push(`/messages/${id}`);
     }
   }
 
 
 
-  const handleDeleteDirectMessage = (friendEmail: string | undefined) => {
+  const handleDeleteDirectMessage = (messageId: number | undefined) => {
     // TODO: Implement delete direct message
-    // router.push("/dashboard/friends");
-
-    // if (socket && session?.user?.email && friendEmail !== undefined) {
-    //   socket.emit(
-    //     "delete_direct_message",
-    //     { ownerEmail: session?.user?.email, friendEmail: friendEmail },
-    //     (res: { message: string; friend: UserType }) => {
-    //       // console.log("Check delete direct message:", res);
-    //       if (
-    //         res.message === "Delete direct message, successfully" &&
-    //         res?.friend
-    //       ) {
-    //         filterDirectMessages(res?.friend);
-    //       }
-    //     }
-    //   );
-    // }
   };
 
-  const getDirectMessageId = (userId: string | undefined) => {
-    // const arr = category.split("/");
-    // if (userId !== undefined && arr?.length && arr?.length === 3) {
-    //   const id = arr[arr?.length - 1];
-    //   if (userId === id) return true;
-    //   return false;
-    // }
-    // return false;
-    return true;
+  const getDirectMessageId = (userId: number | undefined) => {
+    // Check if the current channel is a direct message with the user
+    if (userId && currentChannel) {
+      // TODO: Implement logic to check if the current channel is a direct message with the user
+      return true;
+    }
+    return false;
   };
 
 
