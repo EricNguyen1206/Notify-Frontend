@@ -1,7 +1,7 @@
 import Image from "next/image";
 
-import LoginEmailForm from "@/components/LoginEmailForm";
-import GithubLoginButton from "@/components/GithubLoginButton";
+import GithubLoginButton from "@/components/atoms/GithubLoginButton";
+import LoginEmailForm from "@/components/molecules/LoginEmailForm";
 
 const LoginPage = () => {
   return (

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
-import Sidebar from "@/components/Sidebar";
-import ScreenProvider from "@/components/providers/ScreenProvider";
-import MessagesWebSocketProvider from "@/components/MessagesWebSocketProvider";
+import MessagesWebSocketProvider from "@/components/organisms/MessagesWebSocketProvider";
+import Sidebar from "@/components/organisms/Sidebar";
+import ScreenProvider from "@/components/templates/ScreenProvider";
 import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
-  title: "Discord Clone | Direct Messages",
+  title: "Notify | Direct Messages",
   description: "Developed by ericnguyen1206",
 };
 
@@ -35,11 +35,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <ScreenProvider>
       <MessagesWebSocketProvider userId={user.id}>
         <div className="dark:bg-secondary-gray flex h-screen max-h-screen">
-          <div className="dark:bg-secondary-gray flex h-screen max-h-screen">
-            <Sidebar />
-            <div className="w-[calc(100vw-320px)] flex overflow-y-auto">
-              {children}
-            </div>
+          <Sidebar />
+          <div className="w-full flex overflow-y-auto">
+            {children}
           </div>
         </div>
       </MessagesWebSocketProvider>

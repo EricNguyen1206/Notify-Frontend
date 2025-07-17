@@ -1,9 +1,9 @@
-import Link from "next/link";
-import Image from "next/image";
 import { Download } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import HomePageNavbar from "@/components/HomePageNavbar";
-import HomePageFooter from "@/components/HomePageFooter";
+import HomePageFooter from "@/components/molecules/HomePageFooter";
+import HomePageNavbar from "@/components/molecules/HomePageNavbar";
 
 export default function Home() {
   return (

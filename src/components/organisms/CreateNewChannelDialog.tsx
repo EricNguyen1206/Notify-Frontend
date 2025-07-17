@@ -1,23 +1,18 @@
 import { Dispatch, FormEvent, SetStateAction, useState } from "react";
-// import { useServerStore } from "@/lib/store";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { CategoryType } from "@/types";
-
 import { usePostChannels } from "@/services/endpoints/channels/channels";
 import { PostChannelsBody } from "@/services/schemas";
 import { useAuthStore } from "@/store/useAuthStore";
