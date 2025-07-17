@@ -1,6 +1,6 @@
 "use client";
 
-import MainChat from "@/components/chat/MainChat";
+import MainChat from "@/components/molecules/MainChat";
 
 const DirectMessagesPage = () => {
 

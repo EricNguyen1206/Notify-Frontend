@@ -1,16 +1,25 @@
 'use client'
 
-// import { loginAction } from "@/utils/actions/user";
-// import { useRouter } from "next/navigation";
-import { Provider } from "@supabase/supabase-js";
+// External libraries
 import { useTransition } from "react";
+
+// Third-party utilities
+// (none)
+
+// Types
+import { Provider } from "@supabase/supabase-js";
+
+// Icons
 import { FaGithub } from "react-icons/fa";
-// import { toast } from "react-toastify";
+
+// Helpers, local modules
+// (none)
 
 export default function GithubLoginButton() {
-  // const router = useRouter();
+  // State/hooks
   const [isPending, startTransition] = useTransition();
 
+  // Event Handlers
   const handleClickLoginButton = (provider: Provider) => {
     startTransition(async () => {
       // const { errorMessage, url } = await loginAction(provider);
@@ -22,6 +31,8 @@ export default function GithubLoginButton() {
       // await handleGithubLogin()
     });
   };
+
+  // Render
   return (
     <button
       className="bg-white text-black font-bold rounded-md px-6 py-2 w-[100%] flex items-center gap-3 hover:text-primary-purple"

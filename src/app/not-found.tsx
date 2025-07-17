@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import HomePageFooter from "@/components/HomePageFooter";
-import HomePageNavbar from "@/components/HomePageNavbar";
+import HomePageFooter from "@/components/molecules/HomePageFooter";
+import HomePageNavbar from "@/components/molecules/HomePageNavbar";
 
 const NotFound = () => {
   return (

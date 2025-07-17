@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/tooltip";
 import UserSettingDialog from "./UserSettingDialog";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useSocketStore } from '@/store/useSocketStore';
 
 const UserProfile = () => {
   const user = useAuthStore((state) => state.user);
+  const socket = useSocketStore((state) => state.socket);
 
   const update = (payload: any) => {
     console.log("update", payload);
@@ -43,7 +45,7 @@ const UserProfile = () => {
                 {user?.username}
               </p>
               <p className="font-semibold text-[11px] text-green-500">
-                {user?.username && "Online"}
+                {socket && "Online"}
               </p>
             </div>
           </div>

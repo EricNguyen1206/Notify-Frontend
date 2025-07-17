@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { QueryProvider } from "@/components/providers/QueryClientProvider";
+import { QueryProvider } from "@/components/templates/QueryClientProvider";
+import { ThemeProvider } from "@/components/templates/ThemeProvider";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -11,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Discord Clone",
+  title: "Notify",
   description: "Developed by EricNguyen",
 };
 

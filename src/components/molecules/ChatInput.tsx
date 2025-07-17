@@ -2,22 +2,21 @@ import { ChangeEvent } from "react";
 
 import { Input } from "@/components/ui/input";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
-import { IoSend } from "react-icons/io5";
-import { FaFile } from "react-icons/fa6";
-import { MdEmojiEmotions } from "react-icons/md";
-import { MdClear } from "react-icons/md";
 import { BiSend } from "react-icons/bi";
+import { FaFile } from "react-icons/fa6";
+import { IoSend } from "react-icons/io5";
+import { MdClear, MdEmojiEmotions } from "react-icons/md";
 
 import { FormDataState } from "./MainChat";
 

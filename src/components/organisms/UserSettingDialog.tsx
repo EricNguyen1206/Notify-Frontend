@@ -1,35 +1,46 @@
 "use client";
 
+// External libraries
+import { useRouter } from "next/navigation";
 import React, { ReactNode, useRef, useState } from "react";
 
-// import { handleSignOut } from "@/lib/action";
-// import { editUserByUserId } from "@/utils/actions/api";
-import { censorPassword, getSummaryName } from "@/lib/helper";
-import { useAuthStore } from "@/store/useAuthStore";
+// Third-party utilities
+import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
+import "react-tabs/style/react-tabs.css";
+import { toast } from "react-toastify";
 
+// Types
+// (none)
+
+// Icons
 import { IoIosLogOut } from "react-icons/io";
 
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
-import "react-tabs/style/react-tabs.css";
-import { ThemeToggle } from "./ThemeToggle";
-import { Button } from "./ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { toast } from "react-toastify";
+// Helpers
+import { getSummaryName } from "@/lib/helper";
 import { handleFileUpload } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+
+// UI components
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "../atoms/ThemeToggle";
+import { Button } from "../ui/button";
+
+// Store/state
+import { useAuthStore } from "@/store/useAuthStore";
+
+// Types
+// (none)
 
 type ParentComponentProps = {
   children: ReactNode;
 };
 
 const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
+  // Store/state/hooks
   const profile = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
-
   const router = useRouter();
-
   const [formData, setFormData] = useState<any>({
     id: "",
     name: "",
@@ -41,6 +52,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
   const [image, setImage] = useState<any>(null);
   const avatarRef = useRef<any>(null);
 
+  // Synchronous event handlers
   const handleSignOut = () => {
     clearAuth();
     toast.success("Sign out successfully");
@@ -51,6 +63,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
     setImage(event.target.files[0]);
   };
 
+  // Async event handlers
   const handleEditUserProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let avatar = null;
@@ -112,6 +125,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
     });
   };
 
+  // Render
   return (
     <Dialog>
       <DialogTrigger asChild>

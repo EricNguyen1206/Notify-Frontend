@@ -1,6 +1,6 @@
 "use client";
-import { useEffect } from "react";
 import { useSocketStore } from "@/store/useSocketStore";
+import { useEffect } from "react";
 
 interface MessagesWebSocketProviderProps {
   userId: number;
@@ -17,6 +17,12 @@ export default function MessagesWebSocketProvider({ userId, children }: Messages
       return () => {
         disconnect();
       };
+    }
+
+    return () => {
+      // Cleanup if userId is not provided
+      console.warn("Cleanup function for WebSocket connection");
+      disconnect();
     }
   }, [userId, connect, disconnect]);
 

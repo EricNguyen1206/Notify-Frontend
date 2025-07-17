@@ -1,24 +1,22 @@
 "use client";
 
-import Link from "next/link";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { usePathname, useRouter, useParams } from "next/navigation";
 
-import UserProfile from "./UserProfile";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSocketStore } from "@/store/useSocketStore";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useChannelStore } from "@/store/useChannelStore";
 import { useGetChannels } from "@/services/endpoints/channels/channels";
 import { ModelsChannelListResponse } from "@/services/schemas";
-import { Plus , Tv } from "lucide-react";
-import CreateNewChannelDialog from "./channel/CreateNewChannelDialog";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useChannelStore } from "@/store/useChannelStore";
+import { useSocketStore } from "@/store/useSocketStore";
+import { Plus, Tv } from "lucide-react";
+import CreateNewChannelDialog from "./CreateNewChannelDialog";
+import UserProfile from "./UserProfile";
 
 const Subslidebar = () => {
   const router = useRouter();

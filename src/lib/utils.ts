@@ -1,4 +1,4 @@
-import { CategoryType, ChannelType } from "@/types";
+import { ChannelType } from "@/types";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
