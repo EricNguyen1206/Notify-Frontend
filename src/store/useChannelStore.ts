@@ -12,6 +12,7 @@ interface Channel {
     currentChannel: Channel | null
     setChannels: (channelsData: Channel[]) => void
     setCurrentChannel: (channel: Channel) => void
+    addChannel: (channel: Channel) => void
   }
 
   export const useChannelStore = create<ChannelState>((set) => ({
@@ -20,4 +21,5 @@ interface Channel {
 
     setChannels: (channelsData: Channel[]) => set({channels: channelsData}),
     setCurrentChannel: (channel) => set({ currentChannel: channel }),
+    addChannel: (newChannel: Channel) => set((state) => ({channels: [...state.channels, newChannel]}))
   }))

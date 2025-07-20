@@ -34,7 +34,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   return (
     <ScreenProvider>
       <MessagesWebSocketProvider userId={user.id}>
-        <div className="dark:bg-secondary-gray flex h-screen max-h-screen">
+        <div className="dark:bg-secondary-gray flex h-full">
           <Sidebar />
           <div className="w-full flex overflow-y-auto">
             {children}

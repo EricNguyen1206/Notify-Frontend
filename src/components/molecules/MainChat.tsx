@@ -1,5 +1,5 @@
 // External libraries
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
@@ -20,6 +20,7 @@ import { useGetChatsChannelId, usePostChats } from "@/services/endpoints/chats/c
 
 // Store/state
 import { useAuthStore } from "@/store/useAuthStore";
+import { useChannelStore } from "@/store/useChannelStore";
 import { useSocketStore } from "@/store/useSocketStore";
 
 export interface FormDataState {
@@ -29,12 +30,15 @@ export interface FormDataState {
 const MainChat = () => {
   // Store and session
   const params = useParams();
+  const router = useRouter();
   const sessionUser = useAuthStore((state) => state.user);
-  const { socket } = useSocketStore();
+  const socket = useSocketStore((state) => state.socket);
   const sendChatMutation = usePostChats();
 
   // Derived variables
   const channelId = params?.id?.[0] ? Number(params.id[0]) : undefined;
+
+  const { currentChannel, channels, setCurrentChannel } = useChannelStore(state => state)
 
   // Data fetching hooks
   const {
@@ -50,6 +54,7 @@ const MainChat = () => {
   const [message, setMessage] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [optimisticChats, setOptimisticChats] = useState<DirectMessageChatType[]>([]);
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -58,10 +63,11 @@ const MainChat = () => {
   const mainRef = useRef<HTMLDivElement>(null);
 
   // Derived chats
-  const chats: DirectMessageChatType[] = Array.isArray(chatsData?.data)
-    ? chatsData.data.map((chat: ModelsChatResponse) => ({
+  const chats: DirectMessageChatType[] = [
+    ...Array.isArray(chatsData?.data)
+      ? chatsData.data.map((chat: ModelsChatResponse) => ({
         id: chat.id!,
-        user: {}, // You may want to fetch user details if needed
+        user: {},
         userId: chat.senderId ?? 0,
         friendId: String(chat.receiverId ?? ""),
         text: chat.text ?? "",
@@ -71,7 +77,9 @@ const MainChat = () => {
         fileName: chat.fileName ?? "",
         sended: chat.createdAt ?? "",
       }))
-    : [];
+      : [],
+    ...optimisticChats,
+  ];
 
   // --- useEffect hooks ---
 
@@ -88,6 +96,20 @@ const MainChat = () => {
       };
     }
   }, []);
+
+  useEffect(() => {
+    if (!channelId) {
+      router.replace("/message");
+    }
+    if (!currentChannel) {
+      const existChannel = channels.find(item => item.id == channelId);
+      if (!existChannel) {
+        router.replace("/message");
+        return;
+      }
+      setCurrentChannel(existChannel);
+    }
+  }, [currentChannel]);
 
   // Set overflow if chatBox is taller than available height
   useEffect(() => {
@@ -160,7 +182,6 @@ const MainChat = () => {
   // Synchronous/async event handlers
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("TEST1", formData);
     if (!channelId) {
       toast.error("Channel ID is required to send a message");
       return;
@@ -170,19 +191,54 @@ const MainChat = () => {
       return;
     }
     if (socket && sessionUser?.id && formData?.message !== "" && fileName === "") {
+      // Create optimistic message
+      const optimisticMessage: DirectMessageChatType = {
+        id: new Date().getTime(), // Temporary ID
+        user: {},
+        userId: sessionUser.id,
+        friendId: "", // Not used for channel
+        text: formData.message,
+        type: "channel",
+        provider: "channel",
+        url: "",
+        fileName: "",
+        sended: new Date().toISOString(),
+        // Optionally add a "pending" flag
+        // pending: true,
+      };
+      setOptimisticChats((prev) => [...prev, optimisticMessage]);
+
+      // Send via socket and API
       const msg = {
         action: "message",
         channelId: String(channelId),
         text: formData.message,
       };
       socket.send(JSON.stringify(msg));
-      sendChatMutation.mutate({
-        data: {
-          channelId: channelId,
-          text: formData.message,
-          type: "channel",
+      sendChatMutation.mutate(
+        {
+          data: {
+            channelId: channelId,
+            text: formData.message,
+            type: "channel",
+          },
         },
-      });
+        {
+          onSuccess: () => {
+            // Optionally remove the optimistic message or mark as sent
+            setOptimisticChats((prev) =>
+              prev.filter((m) => m.id !== optimisticMessage.id)
+            );
+          },
+          onError: () => {
+            // Optionally show error and remove or mark as failed
+            setOptimisticChats((prev) =>
+              prev.filter((m) => m.id !== optimisticMessage.id)
+            );
+            toast.error("Failed to send message");
+          },
+        }
+      );
       setFormData({ message: "" });
     }
   };
@@ -190,18 +246,20 @@ const MainChat = () => {
   // --- Render ---
 
   return (
-    <div className="relative w-[100%] h-screen flex flex-col">
-      <div className="w-[100%] h-[56px] px-6 border border-l-0 border-r-0 border-t-0 border-b-primary-black flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* Channel info can go here if needed */}
+    <div className="relative w-full h-full flex flex-col">
+      {currentChannel && (
+        <div className="w-[100%] h-[56px] px-6 border border-l-0 border-r-0 border-t-0 border-b-primary-black flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {currentChannel.name}
+          </div>
+          <div className="flex items-center gap-5">
+            {/* Channel actions can go here if needed */}
+          </div>
         </div>
-        <div className="flex items-center gap-5">
-          {/* Channel actions can go here if needed */}
-        </div>
-      </div>
+      )}
       <div
         ref={containerRef}
-        className={`w-[100%] max-h-[calc(100vh-156px)] h-[calc(100vh-156px)] overflow-y-auto flex px-6 py-4 ${!isOverFlow && "items-end"}`}
+        className="h-full w-full"
       >
         <div ref={chatBoxRef} className="w-[100%] flex flex-col gap-8">
           {/* No friend header, just channel chat history */}
@@ -223,7 +281,7 @@ const MainChat = () => {
                 userIdSession={sessionUser?.id!}
                 chat={chat}
                 mainRef={mainRef}
-                handleDeleteChatById={() => {}}
+                handleDeleteChatById={() => { }}
               />
             );
           })}
@@ -238,9 +296,9 @@ const MainChat = () => {
           file={file}
           fileName={fileName}
           fileInputRef={fileInputRef}
-          handleResetImage={() => {}}
-          handleFileSelection={() => {}}
-          handleSendFileMessage={() => {}}
+          handleResetImage={() => { }}
+          handleFileSelection={() => { }}
+          handleSendFileMessage={() => { }}
           loading={false}
         />
       </div>

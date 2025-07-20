@@ -13,7 +13,6 @@ const RegisterForm = () => {
     password: "",
     adminCode: "",
   });
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const router = useRouter();
   
   const registerMutation = usePostAuthRegister({
@@ -36,12 +35,6 @@ const RegisterForm = () => {
     // Validate required fields
     if (!formData.email || !formData.password || !formData.name) {
       toast.error('Please fill in all required fields');
-      return;
-    }
-
-    // Check if user agreed to terms
-    if (!agreeToTerms) {
-      toast.error('You must agree to the terms of service to continue');
       return;
     }
 
@@ -110,14 +103,6 @@ const RegisterForm = () => {
           onChange={(e) =>
             setFormData({ ...formData, password: e.target.value })
           }
-        />
-      </div>
-      <div className="flex items-center gap-3">
-        <input 
-          className="w-[23px] h-[23px]" 
-          type="checkbox" 
-          checked={agreeToTerms}
-          onChange={(e) => setAgreeToTerms(e.target.checked)}
         />
       </div>
       <button

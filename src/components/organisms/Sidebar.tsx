@@ -142,31 +142,31 @@ const Subslidebar = () => {
         <input
           className="h-[30px] w-[100%] dark:bg-primary-black pl-4 pr-8 py-2 text-[12px] rounded-md outline-none"
           type="text"
-          placeholder="Find or start a conversation"
+          placeholder="Find a conversation"
         />
       </div>
       <div className="w-[100%] mt-2 flex items-center justify-between px-6 text-[12px] dark:text-gray-400 font-bold hover:dark:text-gray-300">
         <p>CHANNELS</p>
         <div className="text-xs text-gray-500">
-          {isChannelsLoading ? "Loading..." : 
+          {isChannelsLoading ? "Loading..." :
             <button className="dark:hover:text-white p-[6px] rounded-md
                         hover:bg-secondary-white hover:text-primary-gray
                         dark:hover:bg-secondary-gray">
               <CreateNewChannelDialog
-                  openCreateChannel={openCreateChannel}
-                  setOpenCreateChannel={setOpenCreateChannel}
-                >
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Plus size={20} />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Create Channel</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CreateNewChannelDialog>
+                openCreateChannel={openCreateChannel}
+                setOpenCreateChannel={setOpenCreateChannel}
+              >
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Plus size={20} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create Channel</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CreateNewChannelDialog>
             </button>
           }
         </div>
@@ -187,11 +187,10 @@ const Subslidebar = () => {
                 onClick={() => handleJoinChannel(item.id)}
                 className={`px-2 py-3 rounded-md text-[14px] flex items-center gap-5 cursor-pointer
                               text-zinc-500 hover:bg-zinc-300 hover:text-primary-black
-                              dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${
-                                channelId === item.id
-                                  ? "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
-                                  : ""
-                              }`}
+                              dark:text-gray-400 dark:hover:bg-zinc-700 dark:hover:text-white ${channelId === item.id
+                    ? "font-semibold text-zinc-900 dark:text-white bg-primary-white dark:bg-secondary-gray"
+                    : ""
+                  }`}
               >
                 <Tv />
                 <p>{item.name}</p>

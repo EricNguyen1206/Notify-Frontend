@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { usePostChannels } from "@/services/endpoints/channels/channels";
 import { PostChannelsBody } from "@/services/schemas";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useChannelStore } from "@/store/useChannelStore";
 
 interface CreateNewChannelDialogProps {
   openCreateChannel: boolean;
@@ -26,6 +27,7 @@ interface CreateNewChannelDialogProps {
 const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
   const { openCreateChannel, setOpenCreateChannel, children } = props;
   const {user} = useAuthStore((state) => state);
+  const { addChannel } = useChannelStore((state) => state);
 
   const initForm: PostChannelsBody = {
     name: "",
@@ -52,7 +54,7 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
     }
   });
 
-  const handleCreateNewChannel = (e: FormEvent<HTMLFormElement>) => {
+  const handleCreateNewChannel = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (formData.name === "") {
@@ -60,11 +62,19 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
       return;
     }
     setLoading(true);
-    postChannelMutation.mutate({
+    const res = await postChannelMutation.mutateAsync({
       data: formData
     });
-  };
 
+    const newChannel = {
+      id: res.data.id!,
+      name: res.data.name!,
+      ownerId: user?.id!,
+      createdAt: res.data.createdAt!
+    }
+    addChannel(newChannel)
+  };
+  
   return (
     <Dialog open={openCreateChannel} onOpenChange={setOpenCreateChannel}>
       <DialogTrigger asChild>

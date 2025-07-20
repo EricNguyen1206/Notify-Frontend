@@ -1,14 +1,14 @@
 "use client";
 
-import { useChannelStore } from "@/store/useChannelStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useChannelStore } from "@/store/useChannelStore";
 
 const DirectMessagesPage = () => {
   const { channels } = useChannelStore();
   const { user } = useAuthStore();
 
   return (
-    <div className="w-full flex flex-col items-center justify-center h-full text-white">
+    <div className="w-screen flex flex-col items-center justify-center h-full text-white">
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold">Welcome to Messages{user?.username ? `, ${user.username}!` : '!'}</h1>
         <div className="text-lg text-gray-400">
