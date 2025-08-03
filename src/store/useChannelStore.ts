@@ -1,25 +1,48 @@
+import { UserType } from '@/types'
 import { create } from 'zustand'
 
-interface Channel {
-    id: number
-    name: string
-    ownerId: number
-    createdAt: string
-  }
+export interface EnhancedChannel {
+  id: number
+  name: string
+  ownerId: number
+  type: 'group' | 'direct'
+  avatar: string
+  lastActivity: Date
+  unreadCount: number
+  members?: UserType[] // load lazy khi cần
+}
 
-  interface ChannelState {
-    channels: Channel[]
-    currentChannel: Channel | null
-    setChannels: (channelsData: Channel[]) => void
-    setCurrentChannel: (channel: Channel) => void
-    addChannel: (channel: Channel) => void
-  }
+// stores/channelStore.ts
+export interface ChannelState {
+  unreadCounts: Record<number, number>
+  activeChannelId: number | null
+  currentChannel: EnhancedChannel | null
+  groupChannels: EnhancedChannel[]
+  directChannels: EnhancedChannel[]
+  setUnreadCount: (channelId: number, count: number) => void
+  setActiveChannel: (channelId: number) => void
+  setCurrentChannel: (channel: EnhancedChannel) => void
+  markAsRead: (channelId: number) => void
+  setGroupChannels: (channels: EnhancedChannel[]) => void
+  setDirectChannels: (channels: EnhancedChannel[]) => void
+}
 
-  export const useChannelStore = create<ChannelState>((set) => ({
-    channels: [],
-    currentChannel: null,
-
-    setChannels: (channelsData: Channel[]) => set({channels: channelsData}),
-    setCurrentChannel: (channel) => set({ currentChannel: channel }),
-    addChannel: (newChannel: Channel) => set((state) => ({channels: [...state.channels, newChannel]}))
-  }))
+export const useChannelStore = create<ChannelState>((set) => ({
+  unreadCounts: {},
+  activeChannelId: null,
+  currentChannel: null,
+  groupChannels: [],
+  directChannels: [],
+  setUnreadCount: (channelId, count) => 
+    set(state => ({
+      unreadCounts: { ...state.unreadCounts, [channelId]: count }
+    })),
+  setActiveChannel: (channelId) => set({ activeChannelId: channelId }),
+  setCurrentChannel: (channel) => set({ currentChannel: channel }),
+  markAsRead: (channelId) =>
+    set(state => ({
+      unreadCounts: { ...state.unreadCounts, [channelId]: 0 }
+    })),
+  setGroupChannels: (channels: EnhancedChannel[]) => set({ groupChannels: channels }),
+  setDirectChannels: (channels: EnhancedChannel[]) => set({ directChannels: channels }),
+}))

@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
 
-import MessagesWebSocketProvider from "@/components/organisms/MessagesWebSocketProvider";
-import Sidebar from "@/components/organisms/Sidebar";
+import AppSidebar from "@/components/organisms/AppSidebar";
 import ScreenProvider from "@/components/templates/ScreenProvider";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+
+import { ClientProviders } from "@/components/templates/ClientProviders";
 import { cookies } from "next/headers";
+import { lazy } from "react";
+
+const MessagesWebSocketProvider = lazy(() => import("@/components/templates/MessagesWebSocketProvider"));
 
 export const metadata: Metadata = {
-  title: "Notify | Direct Messages",
+  title: "Notify | Messages",
   description: "Developed by ericnguyen1206",
 };
 
@@ -33,14 +40,38 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
   return (
     <ScreenProvider>
-      <MessagesWebSocketProvider userId={user.id}>
-        <div className="dark:bg-secondary-gray flex h-full">
-          <Sidebar />
-          <div className="w-full flex overflow-y-auto">
-            {children}
-          </div>
-        </div>
-      </MessagesWebSocketProvider>
+      <ClientProviders userId={user.id}>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <header className="flex h-8 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+              <div className="flex items-center gap-2 px-4">
+                <SidebarTrigger className="-ml-1" />
+                <Separator
+                  orientation="vertical"
+                  className="mr-2 data-[orientation=vertical]:h-4"
+                />
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem className="hidden md:block">
+                      <BreadcrumbLink href="/messages">
+                        Conversation
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>#channel-id</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
+            </header>
+            <div className="w-full h-full flex overflow-y-auto">
+              {children}
+            </div>
+          </SidebarInset>
+        </SidebarProvider>
+      </ClientProviders>
     </ScreenProvider>
   );
 }

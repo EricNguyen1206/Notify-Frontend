@@ -1,14 +1,14 @@
 {
     "openapi": "3.0.1",
     "info": {
-        "title": "",
-        "description": "",
+        "title": "Notify Chat Service API",
+        "description": "A RESTful API service for chat functionality",
         "contact": {},
-        "version": ""
+        "version": "1.0"
     },
     "servers": [
         {
-            "url": "/"
+            "url": "//localhost:8080/api/v1"
         }
     ],
     "paths": {
@@ -24,7 +24,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/models.LoginRequest"
+                                "$ref": "#/components/schemas/chat-service_internal_models.LoginRequest"
                             }
                         }
                     },
@@ -36,7 +36,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/models.LoginResponse"
+                                    "$ref": "#/components/schemas/chat-service_internal_models.LoginResponse"
                                 }
                             }
                         }
@@ -46,8 +46,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -57,8 +56,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -68,8 +66,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -90,7 +87,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/models.RegisterRequest"
+                                "$ref": "#/components/schemas/chat-service_internal_models.RegisterRequest"
                             }
                         }
                     },
@@ -102,7 +99,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/models.UserResponse"
+                                    "$ref": "#/components/schemas/chat-service_internal_models.UserResponse"
                                 }
                             }
                         }
@@ -112,8 +109,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -123,8 +119,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -139,17 +134,14 @@
                     "channels"
                 ],
                 "summary": "Get user's channels",
-                "description": "Get all channels that the current user is a member of",
+                "description": "Get all channels that the current user is a member of, separated by type",
                 "responses": {
                     "200": {
-                        "description": "List of user's channels",
+                        "description": "Object with direct and group channel lists",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/models.ChannelListResponse"
-                                    }
+                                    "$ref": "#/components/schemas/chat-service_internal_models.UserChannelsResponse"
                                 }
                             }
                         }
@@ -159,8 +151,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -170,8 +161,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -209,7 +199,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/models.ChannelResponse"
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ChannelResponse"
                                 }
                             }
                         }
@@ -219,8 +209,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -230,8 +219,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -241,8 +229,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -280,7 +267,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/models.ChannelResponse"
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ChannelDetailResponse"
                                 }
                             }
                         }
@@ -290,8 +277,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -301,8 +287,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -364,8 +349,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -375,8 +359,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -386,8 +369,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -436,8 +418,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -447,8 +428,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -498,8 +478,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -509,8 +488,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -572,8 +550,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -583,8 +560,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -594,8 +570,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -658,8 +633,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -669,8 +643,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -680,8 +653,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -695,7 +667,7 @@
                 "x-codegen-request-body-name": "request"
             }
         },
-        "/chats/": {
+        "/messages/": {
             "post": {
                 "tags": [
                     "chats"
@@ -707,7 +679,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/models.ChatRequest"
+                                "$ref": "#/components/schemas/chat-service_internal_models.ChatRequest"
                             }
                         }
                     },
@@ -719,7 +691,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/models.ChatResponse"
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ChatResponse"
                                 }
                             }
                         }
@@ -729,8 +701,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -740,8 +711,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -751,8 +721,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -766,13 +735,13 @@
                 "x-codegen-request-body-name": "request"
             }
         },
-        "/chats/channel/{id}": {
+        "/messages/channel/{id}": {
             "get": {
                 "tags": [
                     "chats"
                 ],
                 "summary": "Get chat messages in a channel",
-                "description": "Get all chat messages for a specific channel",
+                "description": "Get all chat messages for a specific channel (paginated)",
                 "parameters": [
                     {
                         "name": "id",
@@ -782,18 +751,31 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Page size",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "before",
+                        "in": "query",
+                        "description": "Cursor for infinite scroll (timestamp)",
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of chat messages",
+                        "description": "Paginated chat messages",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/models.ChatResponse"
-                                    }
+                                    "$ref": "#/components/schemas/chat-service_internal_models.PaginatedChatResponse"
                                 }
                             }
                         }
@@ -803,8 +785,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -814,8 +795,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -825,8 +805,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -837,30 +816,6 @@
                         "BearerAuth": []
                     }
                 ]
-            }
-        },
-        "/health": {
-            "get": {
-                "tags": [
-                    "health"
-                ],
-                "summary": "Health check",
-                "description": "Check if the API is running",
-                "responses": {
-                    "200": {
-                        "description": "API is healthy",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         },
         "/users/profile": {
@@ -876,7 +831,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/models.UserResponse"
+                                    "$ref": "#/components/schemas/chat-service_internal_models.UserResponse"
                                 }
                             }
                         }
@@ -886,8 +841,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -897,8 +851,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
                                 }
                             }
                         }
@@ -951,12 +904,71 @@
     },
     "components": {
         "schemas": {
-            "models.ChannelListResponse": {
+            "chat-service_internal_models.Channel": {
+                "type": "object",
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "deleted_at": {
+                        "$ref": "#/components/schemas/gorm.DeletedAt"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "members": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/chat-service_internal_models.User"
+                        }
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the channel"
+                    },
+                    "ownerId": {
+                        "type": "integer",
+                        "description": "ID of the channel owner"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Type of channel, either 'direct' or 'group'"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                }
+            },
+            "chat-service_internal_models.ChannelDetailResponse": {
                 "type": "object",
                 "properties": {
                     "createdAt": {
                         "type": "string"
                     },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "members": {
+                        "type": "array",
+                        "description": "List of members in the channel",
+                        "items": {
+                            "$ref": "#/components/schemas/chat-service_internal_models.User"
+                        }
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "ownerId": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "chat-service_internal_models.ChannelResponse": {
+                "type": "object",
+                "properties": {
                     "id": {
                         "type": "integer"
                     },
@@ -966,29 +978,12 @@
                     "ownerId": {
                         "type": "integer"
                     },
-                    "updatedAt": {
-                        "type": "string"
-                    }
-                }
-            },
-            "models.ChannelResponse": {
-                "type": "object",
-                "properties": {
-                    "createdAt": {
-                        "type": "string"
-                    },
-                    "id": {
-                        "type": "integer"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
                     "type": {
                         "type": "string"
                     }
                 }
             },
-            "models.ChatRequest": {
+            "chat-service_internal_models.ChatRequest": {
                 "required": [
                     "type"
                 ],
@@ -1000,10 +995,6 @@
                     },
                     "fileName": {
                         "type": "string"
-                    },
-                    "receiverId": {
-                        "type": "integer",
-                        "description": "for direct"
                     },
                     "text": {
                         "type": "string"
@@ -1020,7 +1011,7 @@
                     }
                 }
             },
-            "models.ChatResponse": {
+            "chat-service_internal_models.ChatResponse": {
                 "type": "object",
                 "properties": {
                     "channelId": {
@@ -1028,10 +1019,12 @@
                         "description": "channel"
                     },
                     "createdAt": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "timestamp of when the message was created"
                     },
                     "fileName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "optional file name for media"
                     },
                     "id": {
                         "type": "integer"
@@ -1040,25 +1033,68 @@
                         "type": "integer",
                         "description": "Relate to type message"
                     },
+                    "senderAvatar": {
+                        "type": "string",
+                        "description": "url string for avatar"
+                    },
                     "senderId": {
-                        "type": "integer"
+                        "type": "integer",
+                        "description": "ID of the user who sent the message"
                     },
                     "senderName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Username of the sender"
                     },
                     "text": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "free text message"
                     },
                     "type": {
                         "type": "string",
-                        "description": "\"direct\" | \"channel\""
+                        "description": "\"direct\" | \"group\""
                     },
                     "url": {
+                        "type": "string",
+                        "description": "optional URL for media"
+                    }
+                }
+            },
+            "chat-service_internal_models.DirectChannelResponse": {
+                "type": "object",
+                "properties": {
+                    "avatar": {
+                        "type": "string",
+                        "description": "Optional avatar for direct channels"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "ownerId": {
+                        "type": "integer"
+                    },
+                    "type": {
                         "type": "string"
                     }
                 }
             },
-            "models.LoginRequest": {
+            "chat-service_internal_models.ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer"
+                    },
+                    "details": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            },
+            "chat-service_internal_models.LoginRequest": {
                 "required": [
                     "email",
                     "password"
@@ -1073,34 +1109,116 @@
                     }
                 }
             },
-            "models.LoginResponse": {
+            "chat-service_internal_models.LoginResponse": {
                 "type": "object",
                 "properties": {
                     "token": {
                         "type": "string"
                     },
                     "user": {
-                        "$ref": "#/components/schemas/models.UserResponse"
+                        "$ref": "#/components/schemas/chat-service_internal_models.UserResponse"
                     }
                 }
             },
-            "models.RegisterRequest": {
+            "chat-service_internal_models.PaginatedChatResponse": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/chat-service_internal_models.ChatResponse"
+                        }
+                    },
+                    "nextCursor": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "chat-service_internal_models.RegisterRequest": {
+                "required": [
+                    "email",
+                    "password",
+                    "username"
+                ],
                 "type": "object",
                 "properties": {
                     "email": {
                         "type": "string"
                     },
                     "password": {
+                        "minLength": 6,
                         "type": "string"
                     },
                     "username": {
+                        "maxLength": 50,
+                        "minLength": 3,
                         "type": "string"
                     }
                 }
             },
-            "models.UserResponse": {
+            "chat-service_internal_models.User": {
                 "type": "object",
                 "properties": {
+                    "avatar": {
+                        "type": "string",
+                        "description": "Avatar is optional and can be used to store a profile picture URL\nIt is not mandatory for the user to have an avatar."
+                    },
+                    "channels": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/chat-service_internal_models.Channel"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "deleted_at": {
+                        "$ref": "#/components/schemas/gorm.DeletedAt"
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "Unique email for the user"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string",
+                        "description": "Username for the user"
+                    }
+                }
+            },
+            "chat-service_internal_models.UserChannelsResponse": {
+                "type": "object",
+                "properties": {
+                    "direct": {
+                        "type": "array",
+                        "description": "List of channels of type 'direct'",
+                        "items": {
+                            "$ref": "#/components/schemas/chat-service_internal_models.DirectChannelResponse"
+                        }
+                    },
+                    "group": {
+                        "type": "array",
+                        "description": "List of channels of type 'group'",
+                        "items": {
+                            "$ref": "#/components/schemas/chat-service_internal_models.ChannelResponse"
+                        }
+                    }
+                }
+            },
+            "chat-service_internal_models.UserResponse": {
+                "type": "object",
+                "properties": {
+                    "avatar": {
+                        "type": "string"
+                    },
                     "created_at": {
                         "type": "string"
                     },
@@ -1114,6 +1232,26 @@
                         "type": "string"
                     }
                 }
+            },
+            "gorm.DeletedAt": {
+                "type": "object",
+                "properties": {
+                    "time": {
+                        "type": "string"
+                    },
+                    "valid": {
+                        "type": "boolean",
+                        "description": "Valid is true if Time is not NULL"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "apiKey",
+                "description": "Type \"Bearer\" followed by a space and JWT token.",
+                "name": "Authorization",
+                "in": "header"
             }
         }
     },

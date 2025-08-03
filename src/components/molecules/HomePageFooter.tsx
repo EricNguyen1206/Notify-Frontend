@@ -1,11 +1,9 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
-import { FaXTwitter } from "react-icons/fa6";
-import { FaFacebook, FaYoutube, FaTiktok } from "react-icons/fa";
-import { FiInstagram } from "react-icons/fi";
 
 import { HomeFooterLinks } from "@/lib/utils";
+import { Facebook as FaFacebook, Twitter as FaXTwitter, Youtube as FaYoutube, Instagram as FiInstagram } from "lucide-react";
 
 const HomePageFooter = () => {
   return (
@@ -24,9 +22,6 @@ const HomePageFooter = () => {
             </Link>
             <Link href={"https://www.youtube.com/discord"}>
               <FaYoutube size={25} />
-            </Link>
-            <Link href={"https://twitter.com/discord"}>
-              <FaTiktok size={25} />
             </Link>
           </div>
           <div className="flex flex-wrap gap-20">

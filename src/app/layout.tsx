@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-import MainHeader from "@/components/organisms/MainHeader";
 import { QueryProvider } from "@/components/templates/QueryClientProvider";
 import { ThemeProvider } from "@/components/templates/ThemeProvider";
 import { cookies } from 'next/headers';
@@ -38,7 +37,7 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <ToastContainer position="bottom-left" theme="colored" />
-              {user && <MainHeader user={user} />}
+              {/* {user && <MainHeader user={user} />} */}
               <main className="flex-1 overflow-y-auto">
                 {children}
               </main>

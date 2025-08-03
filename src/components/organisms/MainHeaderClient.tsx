@@ -5,9 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { ThemeToggle } from "../atoms/ThemeToggle";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 interface MainHeaderClientProps {
   user: any;
@@ -39,23 +38,19 @@ const MainHeaderClient = ({ user }: MainHeaderClientProps) => {
             </div>
           </Link>
         ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Avatar>
-                {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
-                <AvatarFallback>E</AvatarFallback>
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <Avatar className="w-12 h-12">
+                <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face" />
+                <AvatarFallback>JD</AvatarFallback>
               </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Button variant="purple" onClick={handleSignOut}>
-                  Log Out
-                </Button>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900">John Doe</h3>
+              <p className="text-sm text-green-600">Online</p>
+            </div>
+          </div>
         )}
       </div>
     </div>
