@@ -1,18 +1,18 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
 import { usePostAuthLogin } from '@/services/endpoints/auth/auth';
 import { useAuthStore } from "@/store/useAuthStore";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "react-toastify";
 
 const LoginEmailForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@notify.com");
+  const [password, setPassword] = useState("admin123");
   const router = useRouter();
   const { setUser, setIsAuthenticated, setToken } = useAuthStore();
-  
+
   const loginMutation = usePostAuthLogin({
     mutation: {
       onSuccess: (res) => {
@@ -23,11 +23,11 @@ const LoginEmailForm = () => {
           return;
         }
         const { token, user } = data;
-        
+
         if (token && user) {
           // Store token in cookie
           document.cookie = `token=${token}; path=/; max-age=${60 * 60}; samesite=lax${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
-          
+
           // Store user data in cookie (as JSON string, encode to avoid issues)
           const userCookie = encodeURIComponent(JSON.stringify({
             id: user.id,
@@ -44,7 +44,7 @@ const LoginEmailForm = () => {
             username: user.username || ''
           });
           setIsAuthenticated(true);
-          
+
           toast.success("Login successfully");
           router.push("/messages");
         }

@@ -1,18 +1,16 @@
-import { useState } from "react";
-import Image from "next/image";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
+import { useState } from "react";
 import { toast } from "react-toastify";
 
-import { MdEmojiEmotions } from "react-icons/md";
-import { FaRegTrashAlt } from "react-icons/fa";
-import { IoMdDownload } from "react-icons/io";
-import { FaRegFilePdf } from "react-icons/fa";
+
+import { Download, FileText, Smile, Trash2 } from "lucide-react";
 
 import { DirectMessageChatType, UserType } from "@/types";
 
@@ -71,9 +69,8 @@ const FileChat = (props: PropType) => {
         )}
         <div className="flex flex-col gap-3 text-[13px]">
           <div className="flex items-center gap-3">
-            <p className="font-bold">{`${user?.name} ${
-              userIdSession === chat?.userId ? "(You)" : ""
-            }`}</p>
+            <p className="font-bold">{`${user?.name} ${userIdSession === chat?.userId ? "(You)" : ""
+              }`}</p>
             <p className="text-[12px] text-zinc-400">
               {chat?.sended ? formatDateStr(chat?.sended) : "undefined"}
             </p>
@@ -87,7 +84,7 @@ const FileChat = (props: PropType) => {
               setIsHover(false);
             }}
           >
-            <FaRegFilePdf className="text-secondary-purple" size={40} />
+            <FileText className="text-secondary-purple" size={40} />
             <a href={chat?.url} target="_blank">
               <p
                 className="text-[15px] truncate max-w-[200px] lg:max-w-[300px] font-semibold text-sky-500 dark:text-sky-600
@@ -107,7 +104,7 @@ const FileChat = (props: PropType) => {
                           handleDownloadFile("uploads", "files", chat);
                         }}
                       >
-                        <IoMdDownload size={20} />
+                        <Download size={20} />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -130,7 +127,7 @@ const FileChat = (props: PropType) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <button className="hover:text-primary-purple">
-                <MdEmojiEmotions size={25} />
+                <Smile size={25} />
               </button>
             </TooltipTrigger>
             <TooltipContent>
@@ -148,7 +145,7 @@ const FileChat = (props: PropType) => {
                   else toast.error("Something wrong");
                 }}
               >
-                <FaRegTrashAlt size={20} />
+                <Trash2 size={20} />
               </button>
             </TooltipTrigger>
             <TooltipContent>

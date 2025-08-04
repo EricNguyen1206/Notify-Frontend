@@ -5,15 +5,13 @@ import { useRouter } from "next/navigation";
 import React, { ReactNode, useRef, useState } from "react";
 
 // Third-party utilities
-import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
-import "react-tabs/style/react-tabs.css";
 import { toast } from "react-toastify";
 
 // Types
 // (none)
 
 // Icons
-import { IoIosLogOut } from "react-icons/io";
+import { LogOut, Settings, User } from "lucide-react";
 
 // Helpers
 import { getSummaryName } from "@/lib/helper";
@@ -23,6 +21,7 @@ import { handleFileUpload } from "@/lib/supabase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "../atoms/ThemeToggle";
 import { Button } from "../ui/button";
 
@@ -135,19 +134,26 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
         <div className="absolute right-[50px] top-[10px] flex items-center gap-3">
           <ThemeToggle />
           <Button
-            variant="purple"
+            variant="default"
             onClick={handleSignOut}
           >
+            <LogOut size={16} />
             Log Out
           </Button>
         </div>
-        <Tabs>
-          <TabList>
-            <Tab>My Account</Tab>
-            <Tab>Profiles</Tab>
-          </TabList>
+        <Tabs defaultValue="account">
+          <TabsList>
+            <TabsTrigger value="account" className="flex items-center gap-2">
+              <User size={16} />
+              My Account
+            </TabsTrigger>
+            <TabsTrigger value="profiles" className="flex items-center gap-2">
+              <Settings size={16} />
+              Profiles
+            </TabsTrigger>
+          </TabsList>
 
-          <TabPanel>
+          <TabsContent value="account">
             <div className="mt-10 flex justify-center max-h-[100vh] overflow-y-auto">
               <div className="flex flex-col gap-5 bg-white dark:bg-primary-black w-[100%] lg:w-[900px] p-4 rounded-md">
                 <div className="flex justify-between">
@@ -179,7 +185,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                         handleSignOut();
                       }}
                     >
-                      <IoIosLogOut size={20} />
+                      <LogOut size={20} />
                       <p>Log out</p>
                     </Button>
                   </div>
@@ -195,7 +201,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                         {profile?.id}
                       </p>
                     </div>
-                    <Button variant="purple" disabled>
+                    <Button variant="default" disabled>
                       Edit
                     </Button>
                   </div>
@@ -215,7 +221,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                       />
                     </div>
                     <Button
-                      variant="purple"
+                      variant="default"
                       type="submit"
                       disabled={loading ? true : false}
                     >
@@ -229,7 +235,7 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                         provider
                       </p>
                     </div>
-                    <Button variant="purple" disabled>
+                    <Button variant="default" disabled>
                       Edit
                     </Button>
                   </div>
@@ -247,15 +253,15 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                       />
                     </div>
                     {/* {profile?.provider === "email" ? ( */}
-                      <Button
-                        variant="purple"
-                        type="submit"
-                        disabled={loading ? true : false}
-                      >
-                        {loading ? "Loading..." : "Edit"}
-                      </Button>
+                    <Button
+                      variant="default"
+                      type="submit"
+                      disabled={loading ? true : false}
+                    >
+                      {loading ? "Loading..." : "Edit"}
+                    </Button>
                     {/* ) : (
-                      <Button variant="purple" type="submit" disabled>
+                      <Button variant="default" type="submit" disabled>
                         Edit
                       </Button>
                     )} */}
@@ -269,11 +275,11 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                         disabled={
                           true //profile?.password === null ? true : false
                         }
-                        placeholder={`${ "Password is not available"
+                        placeholder={`${"Password is not available"
                           // profile?.password === null
                           //   ? "Password is not available"
                           //   : censorPassword(profile?.password)
-                        }`}
+                          }`}
                         value={formData.password}
                         onChange={(e) =>
                           setFormData({ ...formData, password: e.target.value })
@@ -281,26 +287,26 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children }) => {
                       />
                     </div>
                     {/* {profile?.password === null ? (
-                      <Button variant="purple" type="submit" disabled>
+                      <Button variant="default" type="submit" disabled>
                         Edit
                       </Button>
                     ) : ( */}
-                      <Button
-                        variant="purple"
-                        type="submit"
-                        disabled={loading ? true : false}
-                      >
-                        {loading ? "Loading..." : "Edit"}
-                      </Button>
+                    <Button
+                      variant="outline"
+                      type="submit"
+                      disabled={loading ? true : false}
+                    >
+                      {loading ? "Loading..." : "Edit"}
+                    </Button>
                     {/* )} */}
                   </div>
                 </form>
               </div>
             </div>
-          </TabPanel>
-          <TabPanel>
+          </TabsContent>
+          <TabsContent value="profiles">
             <div className="mt-10 flex justify-center">Profiles content</div>
-          </TabPanel>
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>

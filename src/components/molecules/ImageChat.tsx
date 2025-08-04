@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -6,12 +5,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Download, Smile, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { toast } from "react-toastify";
-import { saveAs } from "file-saver";
-
-import { MdEmojiEmotions } from "react-icons/md";
-import { FaRegTrashAlt } from "react-icons/fa";
-import { IoMdDownload } from "react-icons/io";
 
 import { DirectMessageChatType, UserType } from "@/types";
 
@@ -69,9 +65,8 @@ const ImageChat = (props: PropType) => {
         <div className="flex flex-col gap-3">
           <div className="flex flex-col text-[13px]">
             <div className="flex items-center gap-3">
-              <p className="font-bold">{`${user?.username} ${
-                userIdSession === chat?.userId ? "(You)" : ""
-              }`}</p>
+              <p className="font-bold">{`${user?.username} ${userIdSession === chat?.userId ? "(You)" : ""
+                }`}</p>
               <p className="text-[12px] text-zinc-400">
                 {chat?.sended ? formatDateStr(chat?.sended) : "undefined"}
               </p>
@@ -104,7 +99,7 @@ const ImageChat = (props: PropType) => {
                           handleDownloadFile("uploads", "images", chat);
                         }}
                       >
-                        <IoMdDownload size={20} />
+                        <Download size={20} />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -127,7 +122,7 @@ const ImageChat = (props: PropType) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <button className="hover:text-primary-purple">
-                <MdEmojiEmotions size={25} />
+                <Smile size={25} />
               </button>
             </TooltipTrigger>
             <TooltipContent>
@@ -145,7 +140,7 @@ const ImageChat = (props: PropType) => {
                   else toast.error("Something wrong");
                 }}
               >
-                <FaRegTrashAlt size={20} />
+                <Trash2 size={20} />
               </button>
             </TooltipTrigger>
             <TooltipContent>

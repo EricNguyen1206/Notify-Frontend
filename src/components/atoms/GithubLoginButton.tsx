@@ -10,7 +10,7 @@ import { useTransition } from "react";
 import { Provider } from "@supabase/supabase-js";
 
 // Icons
-import { FaGithub } from "react-icons/fa";
+import { Github } from "lucide-react";
 
 // Helpers, local modules
 // (none)
@@ -39,7 +39,7 @@ export default function GithubLoginButton() {
       onClick={() => handleClickLoginButton("github")}
       type="button"
     >
-      <FaGithub size={25} />
+      <Github size={25} />
       <p>{isPending ? "Logging in..." : "Login with GitHub"}</p>
     </button>
   );
