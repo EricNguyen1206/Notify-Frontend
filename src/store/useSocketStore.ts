@@ -3,6 +3,8 @@ import { create } from 'zustand';
 
 
 import { WS_MESSAGE_TYPE } from './constant';
+import { useChannelStore } from './useChannelStore';
+import { useChatStore } from './useChatStore';
 
 export interface WsMessage {
   id: string
@@ -10,8 +12,7 @@ export interface WsMessage {
   senderId: string
   senderName: string
   timestamp: string
-  type: 'text' | 'image' | 'file'
-  status: WS_MESSAGE_TYPE
+  type: WS_MESSAGE_TYPE
   chatId: string
 }
 
@@ -22,6 +23,9 @@ interface SocketState {
   // Chat data
   messages: WsMessage[],
   connect: (userId: number) => void;
+  sendMessage: (channelId: number, msg: string) => void;
+  joinChannel: (channelId: number) => void;
+  leaveChannel: (channelId: number) => void;
   disconnect: () => void;
 }
 
@@ -31,61 +35,6 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   isConnected: false,
   error: null,
   messages: [],
-  
-
-  // connect: (userId: number) => {
-  //   console.log("Connecting to WebSocket with userId:", userId);
-  //   // If already connected, do nothing
-  //   // This prevents multiple connections if connect is called multiple times
-  //   // This is important to avoid memory leaks and multiple event listeners
-  //   const { socket } = get()
-  //   if (socket && socket.readyState === WebSocket.OPEN) {
-  //     return; // Already connected
-  //   }
-  //   const baseWsUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? 'ws://localhost:8080';
-  //   const ws = new WebSocket(`${baseWsUrl}/ws?userId=${userId}`);
-
-  //   ws.onopen = () => {
-  //     console.log("WebSocket connection established");
-  //     set({ socket: ws });
-  //     // Connection established
-  //   };
-
-  //   ws.onmessage = (event) => {
-  //     try {
-  //       const data = JSON.parse(event.data) as ChatServiceInternalModelsChatResponse;
-  //       // Expecting: { channelId: "4", userId: 2, text: "TEST", sentAt: "..." }
-  //       if (data.channelId && data.text && data.senderId) {
-  //         useChatStore.getState().addMessageToChannel(String(data.channelId), {
-  //           id: data.id!,
-  //           text: data.text,
-  //           senderId: data.senderId,
-  //           channelId: Number(data.channelId),
-  //           type: data.type as 'channel' | 'direct',
-  //           createdAt: data.createdAt || new Date().toISOString(),
-  //         });
-
-  //         const currentCount = useChannelStore.getState().unreadCounts[Number(data.channelId)] || 0
-  //         useChannelStore.getState().setUnreadCount(Number(data.channelId), currentCount + 1)
-  //       }
-  //     } catch (e) {
-  //       // Handle non-JSON or unexpected messages
-  //     }
-  //   };
-
-  //   ws.onclose = () => {
-  //     // Connection closed
-  //     console.log("WebSocket connection closed");
-  //     set({ socket: null });
-  //   };
-
-  //   ws.onerror = (err) => {
-  //     console.error("WebSocket error:", err);
-  //     // Optionally handle errors
-  //   };
-
-  //   set({ socket: ws });
-  // },
 
   connect: (userId: number) => {
     // Prevent multiple connections
@@ -110,6 +59,41 @@ export const useSocketStore = create<SocketState>((set, get) => ({
 
       newSocket.onmessage = (event) => {
         const message = JSON.parse(event.data)
+        console.log('WebSocket message received:', message)
+        
+        // Handle channel messages
+        if (message.type === "channel.message" && message.data) {
+          const channelMessage = message.data;
+          const activeChannelId = useChannelStore.getState().activeChannelId;
+          
+          console.log('Channel message:', channelMessage)
+          console.log('Active channel ID:', activeChannelId)
+          
+          // Check if the message is for the current active channel
+          if (activeChannelId && channelMessage.channelId === activeChannelId) {
+            console.log('Adding message to chat store for channel:', activeChannelId)
+            
+            // Transform WebSocket message to Message format
+            const transformedMessage = {
+              id: Number(channelMessage.id),
+              channelId: channelMessage.channelId,
+              createdAt: channelMessage.created_at,
+              senderId: channelMessage.senderId,
+              senderName: channelMessage.Sender?.username || "Unknown",
+              senderAvatar: channelMessage.Sender?.avatar,
+              text: channelMessage.text,
+              type: "channel"
+            };
+            
+            console.log('Transformed message:', transformedMessage)
+            
+            // Add message to chat store
+            useChatStore.getState().addMessageToChannel(String(channelMessage.channelId), transformedMessage);
+          } else {
+            console.log('Message not for current channel or no active channel')
+          }
+        }
+        
         set((state) => ({
           messages: [...state.messages, message]
         }))
@@ -121,7 +105,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       }
 
       newSocket.onerror = (error) => {
-        console.error('WebSocket error:', error)
+        console.log('WebSocket error:', error)
         set({ error: 'WebSocket connection failed', isConnected: false })
       }
 
@@ -130,6 +114,38 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       console.error('Failed to create WebSocket:', error)
       set({ error: 'Failed to create WebSocket connection' })
     }
+  },
+
+  sendMessage: (channelId: number, msg: string) => {
+    console.log('TEST msg', msg)
+    const { socket, isConnected } = get();
+    if(!socket || !isConnected || !channelId) {
+      console.log('SOCKET empty');
+      return;
+    }
+    const data = {
+      channelId, text: msg
+    }
+    socket.send(JSON.stringify({type: "channel.message", data}))
+  },
+
+  joinChannel: (channelId: number) => {
+    const { socket, isConnected } = get();
+    if(!socket || !isConnected || !channelId) {
+      return;
+    }
+    const data = {channel_id: channelId.toString()}
+    socket.send(JSON.stringify({type: "channel.join", data}))
+  },
+
+  leaveChannel: (channelId: number) => {
+    const { socket, isConnected } = get();
+    if(!socket || !isConnected || !channelId) {
+      console.log('SOCKET or CHANNEL empty');
+      return;
+    }
+    const data = {channelId: channelId.toString()}
+    socket.send(JSON.stringify({type: "channel.leave", data}))
   },
 
   disconnect: () => {

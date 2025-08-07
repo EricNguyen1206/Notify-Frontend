@@ -15,13 +15,13 @@ export const metadata: Metadata = {
   description: "Developed by EricNguyen",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const cookieStore = cookies();
-  const userCookie = cookieStore.get('user'); // replace 'user' with your actual cookie name
+  const userCookie = (await cookieStore).get('user'); // replace 'user' with your actual cookie name
   const user = userCookie ? JSON.parse(userCookie.value) : null;
 
   return (
