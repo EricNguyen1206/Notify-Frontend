@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const cookieStore = cookies();
-  const userCookie = cookieStore.get("user");
+  const userCookie = (await cookieStore).get("user");
   let user = null;
   if (userCookie) {
     try {

@@ -1,13 +1,14 @@
 "use client";
 
 import { useScreenDimensions } from "@/hooks/useScreenDimensions";
-import { useGetMessagesChannelId, usePostMessages } from "@/services/endpoints/chats/chats";
+import { useGetMessagesChannelId } from "@/services/endpoints/chats/chats";
 import { ChatServiceInternalModelsChatRequest, ChatServiceInternalModelsChatRequestType, ChatServiceInternalModelsChatResponse } from "@/services/schemas";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChannelStore } from "@/store/useChannelStore";
 import { Message, useChatStore } from "@/store/useChatStore";
+import { useSocketStore } from "@/store/useSocketStore";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 // Hook for managing channel navigation and validation
@@ -31,7 +32,7 @@ export const useChannelNavigation = () => {
         directChannels.find(ch => ch.id == channelId)
       }
       console.log('groupChannels', groupChannels),
-      console.log('directChannels', directChannels)
+        console.log('directChannels', directChannels)
       console.log('TEST chan', chan)
       setCurrentChannel(chan!)
     }
@@ -47,7 +48,12 @@ export const useChannelNavigation = () => {
 export const useChatData = (channelId: number | undefined) => {
   const { data: chatsData, isLoading: chatsLoading } = useGetMessagesChannelId(channelId ?? 0);
   const [optimisticChats, setOptimisticChats] = useState<Message[]>([]);
-  const { addMessageToChannel } = useChatStore();
+  const { addMessageToChannel, channels } = useChatStore();
+  
+  // Get messages from chat store for current channel
+  const storeMessages = useMemo(() => 
+    channelId ? channels[String(channelId)] || [] : [], [channels]
+  );
 
   // Transform API data to Message format
   const chats: Message[] = [
@@ -55,6 +61,7 @@ export const useChatData = (channelId: number | undefined) => {
       ? chatsData.data.items.map((chat: ChatServiceInternalModelsChatResponse) => (chat as Message))
       : [],
     ...optimisticChats,
+    ...storeMessages, // Include messages from WebSocket
   ] as Message[];
 
   return {
@@ -146,7 +153,8 @@ export const useMessageSending = (
   setFormData: (data: { message: string }) => void,
   scrollToBottom: () => void
 ) => {
-  const { mutate: sendChatMessage } = usePostMessages();
+  // const { mutate: sendChatMessage } = usePostMessages();
+  const { sendMessage } = useSocketStore()
 
   const handleSendMessage = async (message: string) => {
     if (sessionUser?.id && message !== "" && channelId) {
@@ -156,28 +164,7 @@ export const useMessageSending = (
         type: type,
       }
 
-      sendChatMessage({ data },
-        {
-          onSuccess: (res) => {
-            // Create optimistic message
-            const optimisticMessage: Message = {
-              id: res.data.id!, // Temporary ID
-              senderId: res.data.senderId!,
-              channelId: channelId,
-              text: message,
-              createdAt: res.data.createdAt!,
-              senderAvatar: res.data.senderAvatar,
-              senderName: res.data.senderName
-            };
-
-            setOptimisticChats((prev) => [...prev, optimisticMessage]);
-            addMessageToChannel(String(channelId), optimisticMessage);
-          },
-          onError: () => {
-            toast.error("Failed to send message");
-          },
-        }
-      );
+      sendMessage(channelId, message)
 
       setFormData({ message: "" });
       scrollToBottom();
@@ -193,10 +180,11 @@ export const useMessageSending = (
 export const useChatPage = () => {
   const sessionUser = useAuthStore((state) => state.user);
   const user = useAuthStore((state) => state.user);
+  const [join, setJoin] = useState(false)
 
   const { screenHeight, isOverFlow, updateOverflow } = useScreenDimensions(720);
   const { channelId, activeChannelId } = useChannelNavigation();
-  const { currentChannel } = useChannelStore()
+  const { socket, isConnected, joinChannel, leaveChannel } = useSocketStore()
   const { chats, chatsLoading, optimisticChats, setOptimisticChats, addMessageToChannel } = useChatData(channelId);
   const { containerRef, mainRef, scrollToBottom, scrollToBottomOnUpdate } = useScrollBehavior();
   const { formData, setFormData, noti, setNoti, message, setMessage, file, setFile, fileName, setFileName } = useFormState();
@@ -224,6 +212,19 @@ export const useChatPage = () => {
   useEffect(() => {
     scrollToBottomOnUpdate();
   }, [chatsLoading]);
+
+  useEffect(() => {
+    if (socket && isConnected && channelId && !join) {
+      joinChannel(channelId)
+      setJoin(true);
+    }
+
+    return () => {
+      if (channelId && join) {
+        leaveChannel(channelId)
+      }
+    }
+  }, [socket, isConnected, channelId, join])
 
   return {
     // User data
