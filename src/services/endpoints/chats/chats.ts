@@ -6,22 +6,16 @@
  * OpenAPI spec version: 1.0
  */
 import {
-  useMutation,
   useQuery
 } from 'react-query';
 import type {
-  MutationFunction,
   QueryFunction,
   QueryKey,
-  UseMutationOptions,
-  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from 'react-query';
 
 import type {
-  ChatServiceInternalModelsChatRequest,
-  ChatServiceInternalModelsChatResponse,
   ChatServiceInternalModelsErrorResponse,
   ChatServiceInternalModelsPaginatedChatResponse,
   GetMessagesChannelIdParams
@@ -33,71 +27,6 @@ import { axiosInstance } from '../../axios-config';
 
 
 /**
- * Create a new chat message (channel or direct)
- * @summary Create a new chat message
- */
-export const postMessages = (
-    chatServiceInternalModelsChatRequest: ChatServiceInternalModelsChatRequest,
- signal?: AbortSignal
-) => {
-      
-      
-      return axiosInstance<ChatServiceInternalModelsChatResponse>(
-      {url: `/messages/`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: chatServiceInternalModelsChatRequest, signal
-    },
-      );
-    }
-  
-
-
-export const getPostMessagesMutationOptions = <TError = ChatServiceInternalModelsErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postMessages>>, TError,{data: ChatServiceInternalModelsChatRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof postMessages>>, TError,{data: ChatServiceInternalModelsChatRequest}, TContext> => {
-
-const mutationKey = ['postMessages'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postMessages>>, {data: ChatServiceInternalModelsChatRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  postMessages(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostMessagesMutationResult = NonNullable<Awaited<ReturnType<typeof postMessages>>>
-    export type PostMessagesMutationBody = ChatServiceInternalModelsChatRequest
-    export type PostMessagesMutationError = ChatServiceInternalModelsErrorResponse
-
-    /**
- * @summary Create a new chat message
- */
-export const usePostMessages = <TError = ChatServiceInternalModelsErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postMessages>>, TError,{data: ChatServiceInternalModelsChatRequest}, TContext>, }
- ): UseMutationResult<
-        Awaited<ReturnType<typeof postMessages>>,
-        TError,
-        {data: ChatServiceInternalModelsChatRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getPostMessagesMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    /**
  * Get all chat messages for a specific channel (paginated)
  * @summary Get chat messages in a channel
  */

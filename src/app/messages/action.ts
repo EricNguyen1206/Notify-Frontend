@@ -40,24 +40,24 @@ const transformChannelData = (channels: any[], type: 'group' | 'direct'): Enhanc
  */
 export const useChannelData = () => {
   const { setGroupChannels, setDirectChannels } = useChannelStore();
-  
+
   // Fetch channels data
-  const { 
-    data: channelsData, 
-    isLoading: isChannelsLoading, 
+  const {
+    data: channelsData,
+    isLoading: isChannelsLoading,
     error: channelsError,
-    refetch: refetchChannels 
+    refetch: refetchChannels
   } = useGetChannels();
 
   // Transform and set channel data when it changes
   useEffect(() => {
     if (channelsData?.data) {
       const groupChannels = transformChannelData(
-        channelsData.data.group || [], 
+        channelsData.data.group || [],
         'group'
       );
       const directChannels = transformChannelData(
-        channelsData.data.direct || [], 
+        channelsData.data.direct || [],
         'direct'
       );
 
@@ -82,17 +82,17 @@ export const useChannelData = () => {
 export const useChannelFiltering = (searchQuery: string) => {
   const { groupChannels, directChannels } = useChannelStore();
 
-  const filteredChannels = useMemo(() => 
+  const filteredChannels = useMemo(() =>
     groupChannels.filter(chan =>
       chan.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ), 
+    ),
     [groupChannels, searchQuery]
   );
 
-  const filteredDirectMessages = useMemo(() => 
+  const filteredDirectMessages = useMemo(() =>
     directChannels.filter(chat =>
       chat.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ), 
+    ),
     [directChannels, searchQuery]
   );
 
@@ -107,12 +107,25 @@ export const useChannelFiltering = (searchQuery: string) => {
  * This ensures the connection is established only once
  */
 export const useWebSocketConnection = (userId: number | null) => {
-  const { connect, disconnect, isConnected, error, socket } = useSocketStore();
+  const {
+    connect,
+    disconnect,
+    isConnected,
+    isConnecting,
+    isReconnecting,
+    connectionState,
+    error,
+    client
+  } = useSocketStore();
 
   useEffect(() => {
-    if (userId && !isConnected()) {
+    console.log('useWebSocketConnection', userId, isConnected(), isConnecting());
+    if (userId && !isConnected() && !isConnecting()) {
       console.log('Initiating WebSocket connection for userId:', userId);
-      connect(userId);
+      // Convert userId to string for the new API
+      connect(String(userId)).catch((err) => {
+        console.error('Failed to connect WebSocket:', err);
+      });
     }
 
     // Cleanup on unmount or when userId changes
@@ -122,12 +135,15 @@ export const useWebSocketConnection = (userId: number | null) => {
         disconnect();
       }
     };
-  }, [userId, connect, disconnect, isConnected]);
+  }, [userId, connect, disconnect, isConnected, isConnecting]);
 
   return {
     isConnected: isConnected(),
+    isConnecting: isConnecting(),
+    isReconnecting: isReconnecting(),
+    connectionState,
     error,
-    socket,
+    client,
   };
 };
 
@@ -138,13 +154,13 @@ export const useWebSocketConnection = (userId: number | null) => {
 export const useSidebarActions = (userId?: number) => {
   // Search functionality
   const { searchQuery, setSearchQuery, clearSearch } = useChannelSearch();
-  
+
   // Channel data management
   const { isChannelsLoading, channelsError, refetchChannels } = useChannelData();
-  
+
   // Channel filtering
   const { filteredChannels, filteredDirectMessages } = useChannelFiltering(searchQuery);
-  
+
   // WebSocket connection (optional - only if userId provided)
   const webSocketConnection = userId ? useWebSocketConnection(userId) : null;
 
@@ -153,14 +169,14 @@ export const useSidebarActions = (userId?: number) => {
     searchQuery,
     setSearchQuery,
     clearSearch,
-    
+
     // Channel data
     filteredChannels,
     filteredDirectMessages,
     isChannelsLoading,
     channelsError,
     refetchChannels,
-    
+
     // WebSocket (if applicable)
     webSocketConnection,
   };

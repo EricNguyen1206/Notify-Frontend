@@ -1,5 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useState } from "react";
-import { toast } from "react-toastify";
+import { Dispatch, FormEvent, SetStateAction } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,10 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { usePostChannels } from "@/services/endpoints/channels/channels";
-import { PostChannelsBody } from "@/services/schemas";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useChannelStore } from "@/store/useChannelStore";
+import { useCreateChannel } from "@/hooks/useCreateChannel";
 
 interface CreateNewChannelDialogProps {
   openCreateChannel: boolean;
@@ -26,58 +22,35 @@ interface CreateNewChannelDialogProps {
 
 const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
   const { openCreateChannel, setOpenCreateChannel, children } = props;
-  const { user } = useAuthStore((state) => state);
-  const { setDirectChannels } = useChannelStore((state) => state);
 
-  const initForm: PostChannelsBody = {
-    name: "",
-    ownerId: "",
-  }
-  const [formData, setFormData] = useState<PostChannelsBody>(initForm);
-  const [loading, setLoading] = useState<boolean>(false);
-
-
-
-  const postChannelMutation = usePostChannels({
-    mutation: {
-      onSuccess: (data) => {
-        toast.success("Create new channel successfully");
-        // Optionally, refetch channels or update state here
-        setOpenCreateChannel(false);
-        setFormData(initForm);
-        setLoading(false);
-      },
-      onError: () => {
-        toast.error("Create channel failed");
-        setLoading(false);
-      }
+  const {
+    formData,
+    loading,
+    createChannel,
+    updateFormData,
+    resetForm
+  } = useCreateChannel({
+    onSuccess: () => {
+      // Close dialog and reset form on successful creation
+      setOpenCreateChannel(false);
     }
   });
 
   const handleCreateNewChannel = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    await createChannel();
+  };
 
-    if (formData.name === "") {
-      toast.error("Please type channel name");
-      return;
+  const handleDialogChange = (open: boolean) => {
+    setOpenCreateChannel(open);
+    if (!open) {
+      // Reset form when dialog is closed
+      resetForm();
     }
-    setLoading(true);
-    const res = await postChannelMutation.mutateAsync({
-      data: formData
-    });
-
-    const newChannel = {
-      id: res.data.id!,
-      name: res.data.name!,
-      ownerId: user?.id!,
-      // createdAt: res.data.createdAt!
-    }
-    // addChannel(newChannel)
-    setDirectChannels([])
   };
 
   return (
-    <Dialog open={openCreateChannel} onOpenChange={setOpenCreateChannel}>
+    <Dialog open={openCreateChannel} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
         <div>{children}</div>
       </DialogTrigger>
@@ -87,9 +60,7 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
         </DialogHeader>
         <form
           className="flex flex-col gap-8"
-          onSubmit={(e) => {
-            handleCreateNewChannel(e);
-          }}
+          onSubmit={handleCreateNewChannel}
         >
           <div className="flex flex-col gap-3">
             <Label htmlFor="name" className="text-[12px] font-bold text-left">
@@ -101,49 +72,10 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
               placeholder="New category"
               value={formData.name}
               onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
+                updateFormData({ name: e.target.value });
               }}
             />
           </div>
-          {/* <div className="flex flex-col gap-3">
-            <Label htmlFor="type" className="text-[12px] font-bold text-left">
-              CHANNEL TYPE
-            </Label>
-            <RadioGroup
-              className="flex flex-col gap-5"
-              defaultValue={formData.type}
-              onValueChange={(value: string) => {
-                setFormData({ ...formData, type: value });
-              }}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="text" id="r1" />
-                <Label htmlFor="r1" className="flex items-center gap-3">
-                  <p className="text-[35px]">#</p>
-                  <div className="flex flex-col gap-2">
-                    <p className="font-bold">Text</p>
-                    <p className="text-zinc-400 dark:text-zinc-500">
-                      Send messages, images, GIFs, emoji, opinions, and puns
-                    </p>
-                  </div>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="voice" id="r2" />
-                <Label htmlFor="r1" className="flex items-center gap-3">
-                  <p className="text-[30px]">
-                    <HiSpeakerWave size={25} />
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <p className="font-bold">Voice</p>
-                    <p className="text-zinc-400 dark:text-zinc-500">
-                      Hang out together with voice, video, and screen share
-                    </p>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div> */}
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
@@ -153,7 +85,7 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
             <Button
               type="submit"
               variant="default"
-              disabled={loading ? true : false}
+              disabled={loading}
             >
               Create Channel
             </Button>
@@ -164,4 +96,4 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
   );
 };
 
-export default CreateNewChannelDialog;
+export default CreateNewChannelDialog; 

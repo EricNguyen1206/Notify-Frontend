@@ -2,6 +2,7 @@
 
 import { Hash, Plus } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
 
 import {
   SidebarGroup,
@@ -11,6 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "@/components/ui/sidebar"
+import CreateNewChannelDialog from "../organisms/CreateNewChannelDialog"
 import ChannelsSkeleton from "./ChannelsSkeleton"
 
 export function SidebarChannels({
@@ -20,12 +22,19 @@ export function SidebarChannels({
   items: any[],
   loading: boolean
 }) {
+  const [openCreateChannel, setOpenCreateChannel] = useState(false);
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Channels</SidebarGroupLabel>
-      <SidebarGroupAction>
-        <Plus /> <span className="sr-only">Add Channel</span>
-      </SidebarGroupAction>
+      <CreateNewChannelDialog
+        openCreateChannel={openCreateChannel}
+        setOpenCreateChannel={setOpenCreateChannel}
+      >
+        <SidebarGroupAction onClick={() => setOpenCreateChannel(true)}>
+          <Plus /> <span className="sr-only">Add Channel</span>
+        </SidebarGroupAction>
+      </CreateNewChannelDialog>
       <SidebarMenu>
         {loading ? (
           <ChannelsSkeleton />
