@@ -31,13 +31,13 @@ export async function createClientForServer() {
 
 export const getUser = async () => {
   const auth = getSupabaseAuth();
-  const user = (await auth.getUser()).data.user;
+  const user = (await ((await auth).getUser())).data.user;
 
   return user;
 };
 
-export const getSupabaseAuth = () => {
-  const cookieStore = cookies();
+export const getSupabaseAuth =  async () => {
+  const cookieStore = await cookies();
 
   const supabaseClient = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
