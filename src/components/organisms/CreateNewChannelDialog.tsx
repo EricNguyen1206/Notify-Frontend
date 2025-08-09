@@ -26,13 +26,13 @@ interface CreateNewChannelDialogProps {
 
 const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
   const { openCreateChannel, setOpenCreateChannel, children } = props;
-  const {user} = useAuthStore((state) => state);
-  const { addChannel } = useChannelStore((state) => state);
+  const { user } = useAuthStore((state) => state);
+  const { setDirectChannels } = useChannelStore((state) => state);
 
   const initForm: PostChannelsBody = {
     name: "",
-    ownerId: user?.id || 0,
-    }
+    ownerId: "",
+  }
   const [formData, setFormData] = useState<PostChannelsBody>(initForm);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -70,11 +70,12 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
       id: res.data.id!,
       name: res.data.name!,
       ownerId: user?.id!,
-      createdAt: res.data.createdAt!
+      // createdAt: res.data.createdAt!
     }
-    addChannel(newChannel)
+    // addChannel(newChannel)
+    setDirectChannels([])
   };
-  
+
   return (
     <Dialog open={openCreateChannel} onOpenChange={setOpenCreateChannel}>
       <DialogTrigger asChild>
@@ -151,7 +152,7 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
             </DialogClose>
             <Button
               type="submit"
-              variant="purple"
+              variant="default"
               disabled={loading ? true : false}
             >
               Create Channel
