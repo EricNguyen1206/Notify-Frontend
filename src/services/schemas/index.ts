@@ -9,8 +9,6 @@
 export * from './chatServiceInternalModelsChannel';
 export * from './chatServiceInternalModelsChannelDetailResponse';
 export * from './chatServiceInternalModelsChannelResponse';
-export * from './chatServiceInternalModelsChatRequest';
-export * from './chatServiceInternalModelsChatRequestType';
 export * from './chatServiceInternalModelsChatResponse';
 export * from './chatServiceInternalModelsDirectChannelResponse';
 export * from './chatServiceInternalModelsErrorResponse';
@@ -25,8 +23,6 @@ export * from './deleteChannelsId200';
 export * from './deleteChannelsIdUser200';
 export * from './deleteChannelsIdUserBody';
 export * from './getMessagesChannelIdParams';
-export * from './getWs400';
-export * from './getWsParams';
 export * from './gormDeletedAt';
 export * from './postChannelsBody';
 export * from './postChannelsIdUser200';

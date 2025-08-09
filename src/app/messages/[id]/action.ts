@@ -2,13 +2,13 @@
 
 import { useScreenDimensions } from "@/hooks/useScreenDimensions";
 import { useGetMessagesChannelId } from "@/services/endpoints/chats/chats";
-import { ChatServiceInternalModelsChatRequest, ChatServiceInternalModelsChatRequestType, ChatServiceInternalModelsChatResponse } from "@/services/schemas";
+import { ChatServiceInternalModelsChatResponse } from "@/services/schemas";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChannelStore } from "@/store/useChannelStore";
 import { Message, useChatStore } from "@/store/useChatStore";
 import { useSocketStore } from "@/store/useSocketStore";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 // Hook for managing channel navigation and validation
@@ -46,9 +46,9 @@ export const useChatData = (channelId: number | undefined) => {
   const { data: chatsData, isLoading: chatsLoading } = useGetMessagesChannelId(channelId ?? 0);
   const [optimisticChats, setOptimisticChats] = useState<Message[]>([]);
   const { addMessageToChannel, channels } = useChatStore();
-  
+
   // Get messages from chat store for current channel
-  const storeMessages = useMemo(() => 
+  const storeMessages = useMemo(() =>
     channelId ? channels[String(channelId)] || [] : [], [channels]
   );
 
@@ -140,36 +140,140 @@ export const useFormState = () => {
   };
 };
 
-// Hook for managing message sending
+// Hook for managing message sending with typing indicators
 export const useMessageSending = (
   channelId: number | undefined,
   sessionUser: any,
-  type: ChatServiceInternalModelsChatRequestType,
-  setOptimisticChats: (updater: (prev: Message[]) => Message[]) => void,
-  addMessageToChannel: (channelId: string, msg: Message) => void,
   setFormData: (data: { message: string }) => void,
   scrollToBottom: () => void
 ) => {
-  // const { mutate: sendChatMessage } = usePostMessages();
-  const { sendMessage } = useSocketStore()
+  const { sendMessage, sendTypingIndicator, isConnected, error } = useSocketStore();
+  const [isTyping, setIsTyping] = useState(false);
 
-  const handleSendMessage = async (message: string) => {
-    if (sessionUser?.id && message !== "" && channelId) {
-      const data: ChatServiceInternalModelsChatRequest = {
-        channelId: channelId,
-        text: message,
-        type: type,
+  // Handle sending messages
+  const handleSendMessage = useCallback(async (message: string) => {
+    if (sessionUser?.id && message !== "" && channelId && isConnected()) {
+      try {
+        // Convert channelId to string for the new API
+        sendMessage(String(channelId), message);
+
+        // Stop typing indicator when sending message
+        if (isTyping) {
+          sendTypingIndicator(String(channelId), false);
+          setIsTyping(false);
+        }
+
+        setFormData({ message: "" });
+        scrollToBottom();
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        toast.error('Failed to send message');
       }
-
-      sendMessage(channelId, message)
-
-      setFormData({ message: "" });
-      scrollToBottom();
+    } else if (!isConnected()) {
+      toast.warn('Not connected to chat server');
     }
-  };
+  }, [sessionUser?.id, channelId, isConnected, sendMessage, sendTypingIndicator, isTyping, setFormData, scrollToBottom]);
+
+  // Handle typing indicators
+  const handleStartTyping = useCallback(() => {
+    if (channelId && isConnected() && !isTyping) {
+      sendTypingIndicator(String(channelId), true);
+      setIsTyping(true);
+    }
+  }, [channelId, isConnected, sendTypingIndicator, isTyping]);
+
+  const handleStopTyping = useCallback(() => {
+    if (channelId && isConnected() && isTyping) {
+      sendTypingIndicator(String(channelId), false);
+      setIsTyping(false);
+    }
+  }, [channelId, isConnected, sendTypingIndicator, isTyping]);
+
+  // Auto-stop typing after 3 seconds of inactivity
+  useEffect(() => {
+    if (isTyping) {
+      const timer = setTimeout(() => {
+        handleStopTyping();
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isTyping, handleStopTyping]);
+
+  // Show error notifications
+  useEffect(() => {
+    if (error) {
+      toast.error(`WebSocket Error: ${error.message}`);
+    }
+  }, [error]);
 
   return {
     handleSendMessage,
+    handleStartTyping,
+    handleStopTyping,
+    isTyping,
+    isConnected: isConnected(),
+    error,
+  };
+};
+
+// Hook for managing WebSocket connection and channel operations
+export const useWebSocketChannelManagement = () => {
+  const {
+    client,
+    isConnected,
+    isConnecting,
+    isReconnecting,
+    connectionState,
+    switchChannel,
+    getTypingUsersInChannel,
+    error
+  } = useSocketStore();
+  const {activeChannelId } = useChannelStore();
+
+  // Get channel state from channel store
+  const {
+    getCurrentChannelId,
+    isInChannel,
+  } = useChannelStore();
+
+  // Handle channel switching when channelId changes
+  useEffect(() => {
+    if (isConnected()) {
+      console.log('Channel switching - from:', getCurrentChannelId(), 'to:', activeChannelId);
+      switchChannel(activeChannelId ? String(activeChannelId): null);
+    }
+  }, [activeChannelId, isConnected, switchChannel, getCurrentChannelId]);
+
+  // Leave channel when navigating away from chat entirely (component unmount)
+  useEffect(() => {
+    return () => {
+      // Only leave channel if we're navigating away from chat entirely
+      // This cleanup runs when the component unmounts, not when channelId changes
+      const currentChannel = getCurrentChannelId();
+      if (currentChannel && isConnected()) {
+        console.log('Component unmounting - leaving current channel:', currentChannel);
+        switchChannel(null);
+      }
+    };
+  }, []); // Empty dependency array - only runs on mount/unmount
+
+  // Get typing users for current channel
+  const typingUsers = activeChannelId ? getTypingUsersInChannel(String(activeChannelId)) : [];
+
+  // Check if we're currently in the target channel
+  const isInCurrentChannel = activeChannelId ? isInChannel(String(activeChannelId)) : false;
+
+  return {
+    client,
+    isConnected: isConnected(),
+    isConnecting: isConnecting(),
+    isReconnecting: isReconnecting(),
+    connectionState,
+    isInCurrentChannel,
+    currentChannel: getCurrentChannelId(),
+    typingUsers,
+    error,
   };
 };
 
@@ -177,22 +281,18 @@ export const useMessageSending = (
 export const useChatPage = () => {
   const sessionUser = useAuthStore((state) => state.user);
   const user = useAuthStore((state) => state.user);
-  const [join, setJoin] = useState(false)
 
   const { screenHeight, isOverFlow, updateOverflow } = useScreenDimensions(720);
   const { channelId, activeChannelId } = useChannelNavigation();
-  const { socket, isConnected, joinChannel, leaveChannel } = useSocketStore()
-  const { chats, chatsLoading, optimisticChats, setOptimisticChats, addMessageToChannel } = useChatData(channelId);
+  const webSocketState = useWebSocketChannelManagement();
+  const { chats, chatsLoading } = useChatData(channelId);
   const { containerRef, mainRef, scrollToBottom, scrollToBottomOnUpdate } = useScrollBehavior();
-  const { formData, setFormData, noti, setNoti, message, setMessage, file, setFile, fileName, setFileName } = useFormState();
-  const { handleSendMessage } = useMessageSending(
+  const { formData, setFormData } = useFormState();
+  const messageSending = useMessageSending(
     channelId,
     sessionUser,
-    'channel',
-    setOptimisticChats,
-    addMessageToChannel,
     setFormData,
-    scrollToBottom,
+    scrollToBottom
   );
 
   // Scroll effects
@@ -200,32 +300,15 @@ export const useChatPage = () => {
     if (chats !== undefined && chats?.length) {
       scrollToBottom();
     }
-  }, [chats?.length]);
+  }, [chats?.length, scrollToBottom]);
 
   useEffect(() => {
     scrollToBottomOnUpdate();
-  }, [chats]);
+  }, [chats, scrollToBottomOnUpdate]);
 
   useEffect(() => {
     scrollToBottomOnUpdate();
-  }, [chatsLoading]);
-
-  useEffect(() => {
-    console.log("TEST socket", socket==null)
-    console.log("TEST isConnected", isConnected())
-    console.log("TEST channelId", channelId)
-    console.log("TEST join", join)
-    if (socket && isConnected() && channelId && !join) {
-      joinChannel(channelId)
-      setJoin(true);
-    }
-
-    return () => {
-      if (channelId && join) {
-        leaveChannel(channelId)
-      }
-    }
-  }, [socket, isConnected, channelId, join])
+  }, [chatsLoading, scrollToBottomOnUpdate]);
 
   return {
     // User data
@@ -240,6 +323,12 @@ export const useChatPage = () => {
     chats,
     chatsLoading,
 
+    // WebSocket state
+    webSocketState,
+
+    // Message sending
+    ...messageSending,
+
     // Form state
     formData,
     setFormData,
@@ -253,7 +342,7 @@ export const useChatPage = () => {
     containerRef,
     mainRef,
 
-    // Handlers
-    handleSendMessage,
+    // Handlers (for backward compatibility)
+    handleSendMessage: messageSending.handleSendMessage,
   };
 };

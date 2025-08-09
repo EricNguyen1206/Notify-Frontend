@@ -667,74 +667,6 @@
                 "x-codegen-request-body-name": "request"
             }
         },
-        "/messages/": {
-            "post": {
-                "tags": [
-                    "chats"
-                ],
-                "summary": "Create a new chat message",
-                "description": "Create a new chat message (channel or direct)",
-                "requestBody": {
-                    "description": "Chat message data",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/chat-service_internal_models.ChatRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "201": {
-                        "description": "Chat message created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/chat-service_internal_models.ChatResponse"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request - invalid input data",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized - invalid or missing token",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/chat-service_internal_models.ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "x-codegen-request-body-name": "request"
-            }
-        },
         "/messages/channel/{id}": {
             "get": {
                 "tags": [
@@ -869,8 +801,8 @@
                 "tags": [
                     "websocket"
                 ],
-                "summary": "WebSocket connection",
-                "description": "Establish a WebSocket connection for real-time messaging",
+                "summary": "WebSocket connection for real-time messaging",
+                "description": "Establish a WebSocket connection for real-time messaging with typed message support.\n\n## Message Types\nThe WebSocket API uses typed messages with the following enum values:\n\n### Connection Events\n- `connection.connect` - Connection established (server -> client)\n- `connection.disconnect` - Connection closed (server -> client)\n- `connection.ping` - Ping message (client -> server)\n- `connection.pong` - Pong response (server -> client)\n\n### Channel Events\n- `channel.join` - Join a channel (client -> server)\n- `channel.leave` - Leave a channel (client -> server)\n- `channel.message` - Send/receive channel message (bidirectional)\n- `channel.typing` - Typing indicator (client -> server)\n- `channel.stop_typing` - Stop typing indicator (client -> server)\n\n### Channel Member Events\n- `channel.member.join` - Member joined channel (server -> client)\n- `channel.member.leave` - Member left channel (server -> client)\n\n### User Events\n- `user.status` - User status update (server -> client)\n- `user.notification` - User notification (server -> client)\n\n### Error Events\n- `error` - Error message (server -> client)\n\n## Message Format\nAll messages follow this JSON structure:\n```json\n{\n\"id\": \"unique-message-id\",\n\"type\": \"message-type-enum\",\n\"data\": { /* type-specific data */ },\n\"timestamp\": 1234567890,\n\"user_id\": \"user-id\"\n}\n```\n\n## Example Messages\n\n### Join Channel\n```json\n{\n\"id\": \"msg-123\",\n\"type\": \"channel.join\",\n\"data\": { \"channel_id\": \"channel-123\" },\n\"timestamp\": 1234567890,\n\"user_id\": \"user-456\"\n}\n```\n\n### Send Message\n```json\n{\n\"id\": \"msg-456\",\n\"type\": \"channel.message\",\n\"data\": {\n\"channel_id\": \"channel-123\",\n\"text\": \"Hello world!\",\n\"url\": null,\n\"fileName\": null\n},\n\"timestamp\": 1234567890,\n\"user_id\": \"user-456\"\n}\n```\n\n### Error Response\n```json\n{\n\"id\": \"error-789\",\n\"type\": \"error\",\n\"data\": {\n\"code\": \"INVALID_MESSAGE\",\n\"message\": \"Invalid message format\"\n},\n\"timestamp\": 1234567890,\n\"user_id\": \"user-456\"\n}\n```",
                 "parameters": [
                     {
                         "name": "userId",
@@ -979,34 +911,6 @@
                         "type": "integer"
                     },
                     "type": {
-                        "type": "string"
-                    }
-                }
-            },
-            "chat-service_internal_models.ChatRequest": {
-                "required": [
-                    "type"
-                ],
-                "type": "object",
-                "properties": {
-                    "channelId": {
-                        "type": "integer",
-                        "description": "for channel"
-                    },
-                    "fileName": {
-                        "type": "string"
-                    },
-                    "text": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "direct",
-                            "channel"
-                        ]
-                    },
-                    "url": {
                         "type": "string"
                     }
                 }
