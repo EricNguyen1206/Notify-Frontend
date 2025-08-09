@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
-import { useGetChannels } from "@/services/endpoints/channels/channels";
-import { EnhancedChannel, useChannelStore } from "@/store/useChannelStore";
+import { useSidebarActions } from "@/app/messages/action";
 import { Separator } from "@radix-ui/react-context-menu";
 import { Search } from "lucide-react";
 import NavUser from "../molecules/NavUser";
@@ -13,60 +10,14 @@ import { Input } from "../ui/input";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "../ui/sidebar";
 
 const AppSidebar = () => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [openCreateChannel, setOpenCreateChannel] = useState<boolean>(false);
-
-  /** -------------------- GLOBAL STATE -------------------- */
-  const { groupChannels, directChannels, currentChannel, setGroupChannels, setDirectChannels } = useChannelStore();
-  const filteredChannels = useMemo(() => groupChannels.filter(chan =>
-    chan.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ), [groupChannels])
-
-  const filteredDirectMessages = useMemo(() => directChannels.filter(chat =>
-    chat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ), [directChannels])
-
-  /** -------------------- DATA FETCHING -------------------- */
-
-  // Use react-query to fetch channels
-  const { data: channelsData, isLoading: isChannelsLoading, error: channelsError } = useGetChannels();
-
-  /** -------------------- EVENT HANDLER -------------------- */
-
-  /** -------------------- LIFE CIRCLE -------------------- */
-
-  useEffect(() => {
-    if (channelsData?.data) {
-      setGroupChannels(
-        (channelsData.data).group?.map((ch) => ({
-          id: ch.id ?? 0,
-          name: ch.name,
-          ownerId: ch.ownerId,
-          createdAt: new Date(),
-          type: ch.type,
-          avatar: "",
-          lastActivity: new Date(),
-          unreadCount: 0,
-          members: [],
-        } as EnhancedChannel)) ?? []
-      );
-      setDirectChannels(
-        (channelsData.data).direct?.map((ch) => ({
-          id: ch.id ?? 0,
-          name: ch.name,
-          ownerId: ch.ownerId,
-          createdAt: new Date(),
-          type: ch.type,
-          avatar: ch.avatar,
-          lastActivity: new Date(),
-          unreadCount: 0,
-          members: [],
-        } as EnhancedChannel)) ?? []
-      );
-    } else {
-      setGroupChannels([]);
-    }
-  }, [channelsData]);
+  // Use centralized business logic from actions
+  const {
+    searchQuery,
+    setSearchQuery,
+    filteredChannels,
+    filteredDirectMessages,
+    isChannelsLoading,
+  } = useSidebarActions();
 
   return (
     <Sidebar className="border-gray-200">
@@ -84,7 +35,6 @@ const AppSidebar = () => {
       </SidebarHeader>
 
       <SidebarContent>
-
         {/* Channels Section */}
         <SidebarChannels items={filteredChannels} loading={isChannelsLoading} />
 

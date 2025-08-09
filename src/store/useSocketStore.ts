@@ -18,10 +18,12 @@ export interface WsMessage {
 
 interface SocketState {
   socket: WebSocket | null;
-  isConnected: boolean;
   error: string | null;
   // Chat data
   messages: WsMessage[],
+  // Computed functions
+  isConnected: () => boolean;
+  // Actions
   connect: (userId: number) => void;
   sendMessage: (channelId: number, msg: string) => void;
   joinChannel: (channelId: number) => void;
@@ -29,50 +31,69 @@ interface SocketState {
   disconnect: () => void;
 }
 
+// Helper function to check if WebSocket is connected
+const isSocketConnected = (socket: WebSocket | null): boolean => {
+  return socket !== null && socket.readyState === WebSocket.OPEN;
+};
+
+// Helper function to check if WebSocket is connecting
+const isSocketConnecting = (socket: WebSocket | null): boolean => {
+  return socket !== null && socket.readyState === WebSocket.CONNECTING;
+};
 
 export const useSocketStore = create<SocketState>((set, get) => ({
   socket: null,
-  isConnected: false,
   error: null,
   messages: [],
 
+  // Computed function for connection status
+  isConnected: () => {
+    return isSocketConnected(get().socket);
+  },
+
   connect: (userId: number) => {
-    // Prevent multiple connections
-    const { socket } = get()
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      return
+    const { socket, isConnected } = get();
+    
+    // Prevent multiple connections - check both OPEN and CONNECTING states
+    if (isConnected() || isSocketConnecting(socket)) {
+      console.log('WebSocket already connected or connecting, skipping...');
+      return;
     }
 
     // Only run on client side
     if (typeof window === 'undefined') {
-      return
+      console.log('Server side detected, skipping WebSocket connection');
+      return;
+    }
+
+    // Close existing socket if it exists but is not in a good state
+    if (socket && socket.readyState === WebSocket.CLOSED) {
+      console.log('Cleaning up closed socket before creating new one');
+      set({ socket: null, error: null });
     }
 
     try {
       const baseWsUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? 'ws://localhost:8080/api/v1';
       const newSocket = new WebSocket(`${baseWsUrl}/ws?userId=${userId}`);
+      
+      console.log('Creating new WebSocket connection for userId:', userId);
 
       newSocket.onopen = () => {
-        console.log('WebSocket connected')
-        set({ isConnected: true, error: null })
-      }
+        console.info('WebSocket connected successfully');
+        set({ error: null }); // Clear any previous errors
+      };
 
       newSocket.onmessage = (event) => {
-        const message = JSON.parse(event.data)
-        console.log('WebSocket message received:', message)
+        const message = typeof event.data == "string" ? JSON.parse(event.data): "";
+        console.info('WebSocket message received:', message);
         
         // Handle channel messages
         if (message.type === "channel.message" && message.data) {
           const channelMessage = message.data;
           const activeChannelId = useChannelStore.getState().activeChannelId;
           
-          console.log('Channel message:', channelMessage)
-          console.log('Active channel ID:', activeChannelId)
-          
           // Check if the message is for the current active channel
           if (activeChannelId && channelMessage.channelId === activeChannelId) {
-            console.log('Adding message to chat store for channel:', activeChannelId)
-            
             // Transform WebSocket message to Message format
             const transformedMessage = {
               id: Number(channelMessage.id),
@@ -85,74 +106,110 @@ export const useSocketStore = create<SocketState>((set, get) => ({
               type: "channel"
             };
             
-            console.log('Transformed message:', transformedMessage)
-            
             // Add message to chat store
             useChatStore.getState().addMessageToChannel(String(channelMessage.channelId), transformedMessage);
           } else {
-            console.log('Message not for current channel or no active channel')
+            console.log('Message not for current channel or no active channel');
           }
         }
         
         set((state) => ({
           messages: [...state.messages, message]
-        }))
-      }
+        }));
+      };
 
-      newSocket.onclose = () => {
-        console.log('WebSocket disconnected')
-        set({ isConnected: false, socket: null })
-      }
+      newSocket.onclose = (event) => {
+        console.info('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
+        set({ socket: null, error: null });
+      };
 
       newSocket.onerror = (error) => {
-        console.log('WebSocket error:', error)
-        set({ error: 'WebSocket connection failed', isConnected: false })
-      }
+        console.error('WebSocket error:', error);
+        set({ 
+          error: 'WebSocket connection failed',
+          socket: null // Clear socket on error
+        });
+      };
 
-      set({ socket: newSocket })
+      // Set the new socket immediately after creating it
+      set({ socket: newSocket });
+      
     } catch (error) {
-      console.error('Failed to create WebSocket:', error)
-      set({ error: 'Failed to create WebSocket connection' })
+      console.error('Failed to create WebSocket:', error);
+      set({ 
+        error: 'Failed to create WebSocket connection',
+        socket: null
+      });
     }
   },
 
   sendMessage: (channelId: number, msg: string) => {
-    console.log('TEST msg', msg)
+    console.log('Sending message:', msg);
     const { socket, isConnected } = get();
-    if(!socket || !isConnected || !channelId) {
-      console.log('SOCKET empty');
+    
+    if (!isConnected() || !channelId) {
+      console.log('Cannot send message: socket not connected or invalid channelId');
       return;
     }
+    
     const data = {
-      channelId, text: msg
+      channelId, 
+      text: msg
+    };
+    
+    try {
+      socket!.send(JSON.stringify({type: "channel.message", data}));
+    } catch (error) {
+      console.error('Error sending message:', error);
+      set({ error: 'Failed to send message' });
     }
-    socket.send(JSON.stringify({type: "channel.message", data}))
   },
 
   joinChannel: (channelId: number) => {
+    console.log('Joining channel:', channelId);
     const { socket, isConnected } = get();
-    if(!socket || !isConnected || !channelId) {
+    
+    if (!isConnected() || !channelId) {
+      console.log('Cannot join channel: socket not connected or invalid channelId');
       return;
     }
-    const data = {channel_id: channelId.toString()}
-    socket.send(JSON.stringify({type: "channel.join", data}))
+    
+    const data = { channel_id: channelId.toString() };
+    
+    try {
+      socket!.send(JSON.stringify({type: "channel.join", data}));
+    } catch (error) {
+      console.error('Error joining channel:', error);
+      set({ error: 'Failed to join channel' });
+    }
   },
 
   leaveChannel: (channelId: number) => {
+    console.log('Leaving channel:', channelId);
     const { socket, isConnected } = get();
-    if(!socket || !isConnected || !channelId) {
-      console.log('SOCKET or CHANNEL empty');
+    
+    if (!isConnected() || !channelId) {
+      console.log('Cannot leave channel: socket not connected or invalid channelId');
       return;
     }
-    const data = {channelId: channelId.toString()}
-    socket.send(JSON.stringify({type: "channel.leave", data}))
+    
+    const data = { channelId: channelId.toString() };
+    
+    try {
+      socket!.send(JSON.stringify({type: "channel.leave", data}));
+    } catch (error) {
+      console.error('Error leaving channel:', error);
+      set({ error: 'Failed to leave channel' });
+    }
   },
 
   disconnect: () => {
-    const { socket } = get()
+    const { socket } = get();
+    
     if (socket) {
-      socket.close()
-      set({ socket: null, isConnected: false })
+      console.log('Disconnecting WebSocket');
+      socket.close(1000, 'Client disconnecting'); // Normal closure
+      set({ socket: null, error: null });
     }
   },
 }));

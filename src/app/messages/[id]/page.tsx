@@ -33,12 +33,12 @@ const DirectMessagesPage = () => {
           <MessagesSkeleton isGroup={true} />
         ) : (
           <div className="space-y-0">
-            {chats.map((message) => (
+            {user?.id && chats.map((message) => (
               <MessageBubble
                 key={message.id}
                 message={message}
                 isGroup={true}
-                userId={user!.id}
+                userId={user.id}
               />
             ))}
             {/* Invisible element to scroll to */}

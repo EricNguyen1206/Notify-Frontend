@@ -31,9 +31,6 @@ export const useChannelNavigation = () => {
       if (!chan) {
         directChannels.find(ch => ch.id == channelId)
       }
-      console.log('groupChannels', groupChannels),
-        console.log('directChannels', directChannels)
-      console.log('TEST chan', chan)
       setCurrentChannel(chan!)
     }
   }, [channelId, activeChannelId, groupChannels, directChannels, router]);
@@ -214,7 +211,11 @@ export const useChatPage = () => {
   }, [chatsLoading]);
 
   useEffect(() => {
-    if (socket && isConnected && channelId && !join) {
+    console.log("TEST socket", socket==null)
+    console.log("TEST isConnected", isConnected())
+    console.log("TEST channelId", channelId)
+    console.log("TEST join", join)
+    if (socket && isConnected() && channelId && !join) {
       joinChannel(channelId)
       setJoin(true);
     }
