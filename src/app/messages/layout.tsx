@@ -8,9 +8,6 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 
 import { ClientProviders } from "@/components/templates/ClientProviders";
 import { cookies } from "next/headers";
-import { lazy } from "react";
-
-const MessagesWebSocketProvider = lazy(() => import("@/components/templates/MessagesWebSocketProvider"));
 
 export const metadata: Metadata = {
   title: "Notify | Messages",
