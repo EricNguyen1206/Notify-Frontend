@@ -1,4 +1,4 @@
-import { ChannelJoinData, ChannelMessageData, MessageType, WsBaseMessage, WsMessageType } from './types/wsTypes';
+import { ChannelJoinData, ChannelMessageData, ChannelMessageReceivedMessage, MessageType, WsBaseMessage, WsMessageType } from './types/wsTypes';
 
 // Connection states
 export enum ConnectionState {
@@ -71,7 +71,7 @@ export interface WebSocketEventListeners {
   onDisconnect?: () => void;
   onError?: (error: Event) => void;
   onMessage?: <T>(message: WsBaseMessage<T>) => void;
-  onChannelMessage?: (message: WsBaseMessage<ChannelMessageData>) => void;
+  onChannelMessage?: (message: ChannelMessageReceivedMessage) => void;
   onTypingIndicator?: (message: WsBaseMessage<TypingIndicatorData>) => void;
   onMemberJoin?: (message: WsBaseMessage<MemberJoinLeaveData>) => void;
   onMemberLeave?: (message: WsBaseMessage<MemberJoinLeaveData>) => void;
@@ -262,7 +262,7 @@ export class TypeSafeWebSocketClient {
       // Emit specific message type events
       switch (data.type) {
         case WsMessageType.CHANNEL_MESSAGE:
-          this.listeners.onChannelMessage?.(data as WsBaseMessage<ChannelMessageData>);
+          this.listeners.onChannelMessage?.(data as ChannelMessageReceivedMessage);
           break;
         case WsMessageType.CHANNEL_TYPING:
         case WsMessageType.CHANNEL_STOP_TYPING:

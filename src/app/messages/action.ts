@@ -119,9 +119,7 @@ export const useWebSocketConnection = (userId: number | null) => {
   } = useSocketStore();
 
   useEffect(() => {
-    console.log('useWebSocketConnection', userId, isConnected(), isConnecting());
     if (userId && !isConnected() && !isConnecting()) {
-      console.log('Initiating WebSocket connection for userId:', userId);
       // Convert userId to string for the new API
       connect(String(userId)).catch((err) => {
         console.error('Failed to connect WebSocket:', err);
