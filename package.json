@@ -42,9 +42,9 @@
     "lucide-react": "^0.525.0",
     "next": "^15.4.4",
     "next-themes": "^0.2.1",
-    "react": "^19",
+    "react": "^19.1.1",
     "react-chartjs-2": "^5.2.0",
-    "react-dom": "^18",
+    "react-dom": "^19.1.1",
     "react-query": "^3.39.3",
     "react-toastify": "^10.0.4",
     "socket.io-client": "^4.7.4",
@@ -58,16 +58,19 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^24",
     "@types/react": "^19",
-    "@types/react-dom": "^18",
+    "@types/react-dom": "^19.1.7",
     "@types/uuid": "^9.0.8",
     "autoprefixer": "^10.0.1",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-promise": "^7.2.1",
     "orval": "^7.10.0",
     "postcss": "^8",
     "prettier": "^3.6.2",
     "supabase": "^2.22.12",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "typescript-eslint": "^8.39.0"
   }
 }
