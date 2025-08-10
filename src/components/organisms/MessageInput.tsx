@@ -67,19 +67,19 @@ export default function MessageInput({
   }, [message, hasTyped, onStopTyping])
 
   return (
-    <div className="p-5 bg-white border-t border-gray-200">
+    <div className="p-chat-outer bg-background border-t border-chat-border">
       {/* Connection status indicator */}
       {!isConnected && (
-        <div className="mb-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-1">
+        <div className="mb-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-chat px-3 py-1 font-normal">
           Not connected to chat server
         </div>
       )}
 
       <div className="flex items-center space-x-3">
         <div className="flex-1 w-full">
-          <div className="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 w-full">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-200 cursor-not-allowed">
-              <Paperclip className="w-4 h-4 text-gray-500" />
+          <div className="flex items-center space-x-2 bg-input-background border border-chat-border rounded-chat px-3 py-2 w-full focus-within:border-chat-primary transition-colors">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-chat-accent/10 cursor-not-allowed">
+              <Paperclip className="w-4 h-4 text-muted-foreground" />
             </Button>
             <input
               type="text"
@@ -94,17 +94,17 @@ export default function MessageInput({
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               disabled={disabled || !isConnected}
-              className="flex-1 bg-transparent outline-none resize-none disabled:cursor-not-allowed disabled:text-gray-400"
+              className="flex-1 bg-transparent outline-none resize-none disabled:cursor-not-allowed disabled:text-gray-400 font-normal text-base"
             />
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-200 cursor-not-allowed">
-              <Smile className="w-4 h-4 text-gray-500" />
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-chat-accent/10 cursor-not-allowed">
+              <Smile className="w-4 h-4 text-muted-foreground" />
             </Button>
           </div>
         </div>
         <Button
           onClick={handleSend}
           disabled={!message.trim() || disabled || !isConnected}
-          className="h-10 w-10 p-0 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300"
+          className="h-10 w-10 p-0 bg-chat-primary hover:bg-chat-secondary disabled:bg-gray-300 rounded-chat"
         >
           <Send className="w-4 h-4" />
         </Button>

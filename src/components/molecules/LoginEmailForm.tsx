@@ -63,21 +63,21 @@ const LoginEmailForm = () => {
 
   return (
     <form
-      className="flex flex-col gap-5 w-[100%] md:w-auto"
+      className="flex flex-col gap-chat-gutter w-[100%] md:w-auto p-chat-outer"
       onSubmit={handleSubmit}
     >
       <div className="flex flex-col gap-3 items-center">
-        <h1 className="text-xl font-bold">Welcome back!</h1>
-        <p className="text-sm text-gray-400">
+        <h1 className="text-xl font-medium text-white">Welcome back!</h1>
+        <p className="text-sm text-gray-400 font-normal">
           We're so excited to see you again!
         </p>
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-[12px] font-black text-gray-400">
+        <p className="text-xs font-medium text-gray-400">
           EMAIL OR PHONE NUMBER
         </p>
         <input
-          className="w-auto md:w-[450px] outline-none p-2 bg-primary-black text-white rounded-md"
+          className="w-auto md:w-[450px] outline-none p-3 bg-primary-black text-white rounded-chat border border-chat-border focus:border-chat-primary transition-colors"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -85,9 +85,9 @@ const LoginEmailForm = () => {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-[12px] font-black text-gray-400">PASSWORD</p>
+        <p className="text-xs font-medium text-gray-400">PASSWORD</p>
         <input
-          className="w-auto md:w-[450px] outline-none p-2 bg-primary-black text-white rounded-md"
+          className="w-auto md:w-[450px] outline-none p-3 bg-primary-black text-white rounded-chat border border-chat-border focus:border-chat-primary transition-colors"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -95,21 +95,21 @@ const LoginEmailForm = () => {
         />
       </div>
       <Link href={"/forgot-password"}>
-        <p className="text-[12px] text-sky-500 hover:underline hover:underline-offset-1">
+        <p className="text-xs text-chat-accent hover:underline hover:underline-offset-1 font-normal">
           Forgot your password?
         </p>
       </Link>
       <button
         type="submit"
-        className="bg-primary-purple text-white py-2 rounded-md"
+        className="bg-chat-primary text-white py-3 rounded-chat font-medium hover:bg-chat-secondary transition-colors disabled:opacity-50"
         disabled={loginMutation.isLoading}
       >
         {loginMutation.isLoading ? "Loading..." : "Log In"}
       </button>
-      <div className="text-[12px] flex items-center gap-1">
-        <p>Need an account?</p>
+      <div className="text-xs flex items-center gap-1 font-normal">
+        <p className="text-gray-400">Need an account?</p>
         <Link href={"/register"}>
-          <p className="text-sky-500 hover:underline hover:underline-offset-1">
+          <p className="text-chat-accent hover:underline hover:underline-offset-1">
             Register
           </p>
         </Link>

@@ -28,7 +28,7 @@ const DirectMessagesPage = () => {
     const typingUsers = webSocketState?.typingUsers || [];
 
     return (
-        <div className="w-full h-full flex flex-col bg-gray-50">
+        <div className="w-full h-full flex flex-col bg-background">
             <ChatHeader
                 id={String(channelId)}
                 name={String(channelId)}
@@ -51,14 +51,14 @@ const DirectMessagesPage = () => {
             )}
 
             {connectionStatus === ConnectionState.ERROR && webSocketState?.error && (
-                <div className="px-5 py-2 bg-red-50 border-b border-red-200">
-                    <div className="text-sm text-red-600">
+                <div className="px-chat-outer py-2 bg-red-50 border-b border-red-200">
+                    <div className="text-sm text-chat-error font-normal">
                         Connection error: {webSocketState.error.message}
                     </div>
                 </div>
             )}
 
-            <ScrollArea ref={containerRef} className="flex-1 p-5">
+            <ScrollArea ref={containerRef} className="flex-1 p-chat-outer">
                 {chatsLoading ? (
                     <MessagesSkeleton isGroup={true} />
                 ) : (
@@ -74,13 +74,13 @@ const DirectMessagesPage = () => {
 
                         {/* Typing indicators */}
                         {typingUsers.length > 0 && (
-                            <div className="flex items-center space-x-2 py-2 px-4 text-sm text-gray-500">
+                            <div className="flex items-center space-x-2 py-2 px-4 text-sm text-muted-foreground">
                                 <div className="flex space-x-1">
-                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                    <div className="w-2 h-2 bg-chat-accent rounded-full animate-bounce"></div>
+                                    <div className="w-2 h-2 bg-chat-accent rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                    <div className="w-2 h-2 bg-chat-accent rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                                 </div>
-                                <span>
+                                <span className="font-normal">
                                     {typingUsers.length === 1
                                         ? `${typingUsers[0].userId} is typing...`
                                         : `${typingUsers.length} people are typing...`
