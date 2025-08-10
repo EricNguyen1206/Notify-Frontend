@@ -20,32 +20,32 @@ const AppSidebar = () => {
   } = useSidebarActions();
 
   return (
-    <Sidebar className="border-gray-200">
+    <Sidebar className="border-chat-border">
       {/* Search Section*/}
-      <SidebarHeader>
+      <SidebarHeader className="p-chat-outer">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 border-gray-200 rounded-md"
+            className="pl-10 border-chat-border rounded-chat focus:border-chat-primary transition-colors"
           />
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-chat-gutter">
         {/* Channels Section */}
         <SidebarChannels items={filteredChannels} loading={isChannelsLoading} />
 
-        <Separator className="mx-4" />
+        <Separator className="mx-4 bg-chat-border" />
 
         {/* Direct Messages Section */}
         <SidebarDirectMessages items={filteredDirectMessages} loading={isChannelsLoading} />
       </SidebarContent>
 
       {/* User Profile Section */}
-      <SidebarFooter>
+      <SidebarFooter className="p-chat-outer border-t border-chat-border">
         <NavUser />
       </SidebarFooter>
     </Sidebar>

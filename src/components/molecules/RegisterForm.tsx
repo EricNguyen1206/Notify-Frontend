@@ -14,7 +14,7 @@ const RegisterForm = () => {
     adminCode: "",
   });
   const router = useRouter();
-  
+
   const registerMutation = usePostAuthRegister({
     mutation: {
       onSuccess: (data) => {
@@ -31,7 +31,7 @@ const RegisterForm = () => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     // Validate required fields
     if (!formData.email || !formData.password || !formData.name) {
       toast.error('Please fill in all required fields');
@@ -64,16 +64,16 @@ const RegisterForm = () => {
 
   return (
     <form
-      className="flex flex-col gap-5 w-[100%] md:w-auto"
+      className="flex flex-col gap-chat-gutter w-[100%] md:w-auto p-chat-outer"
       onSubmit={handleSubmit}
     >
       <div className="flex flex-col gap-3 items-center">
-        <h1 className="text-xl font-bold">Create an account</h1>
+        <h1 className="text-xl font-medium text-white">Create an account</h1>
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-[12px] font-black text-gray-400">EMAIL</p>
+        <p className="text-xs font-medium text-gray-400">EMAIL</p>
         <input
-          className="w-auto md:w-[450px] outline-none p-2 bg-primary-black text-white rounded-md"
+          className="w-auto md:w-[450px] outline-none p-3 bg-primary-black text-white rounded-chat border border-chat-border focus:border-chat-primary transition-colors"
           name="email"
           type="email"
           required
@@ -82,20 +82,20 @@ const RegisterForm = () => {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-[12px] font-black text-gray-400">NAME</p>
+        <p className="text-xs font-medium text-gray-400">NAME</p>
         <input
-          className="w-auto md:w-[450px] outline-none p-2 bg-primary-black text-white rounded-md"
+          className="w-auto md:w-[450px] outline-none p-3 bg-primary-black text-white rounded-chat border border-chat-border focus:border-chat-primary transition-colors"
           name="name"
-          type="type"
+          type="text"
           required
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-[12px] font-black text-gray-400">PASSWORD</p>
+        <p className="text-xs font-medium text-gray-400">PASSWORD</p>
         <input
-          className="w-auto md:w-[450px] outline-none p-2 bg-primary-black text-white rounded-md"
+          className="w-auto md:w-[450px] outline-none p-3 bg-primary-black text-white rounded-chat border border-chat-border focus:border-chat-primary transition-colors"
           name="password"
           type="password"
           required
@@ -107,14 +107,14 @@ const RegisterForm = () => {
       </div>
       <button
         type="submit"
-        className="bg-primary-purple text-white py-2 rounded-md"
+        className="bg-chat-primary text-white py-3 rounded-chat font-medium hover:bg-chat-secondary transition-colors disabled:opacity-50"
         disabled={registerMutation.isLoading}
       >
         {registerMutation.isLoading ? "Loading..." : "Continue"}
       </button>
-      <div className="text-[12px] flex items-center gap-1">
+      <div className="text-xs flex items-center gap-1 font-normal">
         <Link href={"/login"}>
-          <p className="text-sky-500 hover:underline hover:underline-offset-1">
+          <p className="text-chat-accent hover:underline hover:underline-offset-1">
             Already have an account?
           </p>
         </Link>

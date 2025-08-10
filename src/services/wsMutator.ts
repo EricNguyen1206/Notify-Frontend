@@ -281,7 +281,7 @@ export class TypeSafeWebSocketClient {
           this.listeners.onUserNotification?.(data as WsBaseMessage<UserNotificationData>);
           break;
         case WsMessageType.ERROR:
-          console.error('WebSocket error message:', data.data);
+          console.log('WebSocket error message:', data);
           break;
       }
     } catch (error) {

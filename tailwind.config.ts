@@ -19,30 +19,41 @@ const config = {
   	},
   	extend: {
   		colors: {
-  			'primary-purple': '#404eed',
-  			'secondary-purple': '#7289da',
+  			// New Design System Colors
+  			'chat-primary': '#6366F1',
+  			'chat-secondary': '#8B5CF6',
+  			'chat-accent': '#06B6D4',
+  			'chat-error': '#DF3F40',
+  			'chat-border': '#E3E6EA',
+
+  			// Legacy colors (updated to match new design system)
+  			'primary-purple': '#6366F1',
+  			'secondary-purple': '#8B5CF6',
   			'primary-gray': '#2b2d31',
   			'secondary-gray': '#313338',
   			'hidden-gray': '#f6f6f6',
   			'primary-black': '#1e1f22',
   			'primary-white': '#e3e3e3',
   			'secondary-white': '#f2f2f2',
-  			border: 'hsl(var(--border))',
-  			input: 'hsl(var(--input))',
-  			ring: 'hsl(var(--ring))',
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
+
+  			// Shadcn/UI colors using new design system
+  			border: 'var(--border)',
+  			input: 'var(--input)',
+  			'input-background': 'var(--input-background)',
+  			ring: 'var(--ring)',
+  			background: 'var(--background)',
+  			foreground: 'var(--foreground)',
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
+  				DEFAULT: 'var(--primary)',
+  				foreground: 'var(--primary-foreground)'
   			},
   			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
+  				DEFAULT: 'var(--secondary)',
+  				foreground: 'var(--secondary-foreground)'
   			},
   			destructive: {
-  				DEFAULT: 'hsl(var(--destructive))',
-  				foreground: 'hsl(var(--destructive-foreground))'
+  				DEFAULT: 'var(--destructive)',
+  				foreground: 'var(--destructive-foreground)'
   			},
   			muted: {
   				DEFAULT: 'hsl(var(--muted))',
@@ -74,7 +85,30 @@ const config = {
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			// Design system border radius
+  			'chat': '6px'
+  		},
+  		spacing: {
+  			// Design system spacing
+  			'chat-outer': '20px',
+  			'chat-gutter': '16px'
+  		},
+  		fontWeight: {
+  			// Design system font weights
+  			'normal': '400',
+  			'medium': '500'
+  		},
+  		fontSize: {
+  			// Design system font sizes (16px base)
+  			'xs': '0.75rem',
+  			'sm': '0.875rem',
+  			'base': '1rem',
+  			'lg': '1.125rem',
+  			'xl': '1.25rem',
+  			'2xl': '1.5rem',
+  			'3xl': '1.875rem',
+  			'4xl': '2.25rem'
   		},
   		keyframes: {
   			'accordion-down': {

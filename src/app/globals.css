@@ -11,85 +11,120 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: #030213;
-    --primary-foreground: oklch(1 0 0);
-    --secondary: oklch(0.95 0.0058 264.53);
-    --secondary-foreground: #030213;
+    --primary: #6366F1;
+    --primary-foreground: #ffffff;
+    --secondary: #8B5CF6;
+    --secondary-foreground: #ffffff;
     --muted: #ececf0;
     --muted-foreground: #717182;
-    --accent: #e9ebef;
-    --accent-foreground: #030213;
-    --destructive: #d4183d;
+    --accent: #06B6D4;
+    --accent-foreground: #ffffff;
+    --destructive: #DF3F40;
     --destructive-foreground: #ffffff;
-    --border: rgba(0, 0, 0, 0.1);
+    --border: #E3E6EA;
     --input: transparent;
     --input-background: #f3f3f5;
     --switch-background: #cbced4;
     --font-weight-medium: 500;
     --font-weight-normal: 400;
-    --ring: oklch(0.708 0 0);
+    --ring: #6366F1;
     --chart-1: oklch(0.646 0.222 41.116);
     --chart-2: oklch(0.6 0.118 184.704);
     --chart-3: oklch(0.398 0.07 227.392);
     --chart-4: oklch(0.828 0.189 84.429);
     --chart-5: oklch(0.769 0.188 70.08);
     --radius: 0.375rem;
-    --sidebar: oklch(0.985 0 0);
+    --sidebar: #ffffff;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    
-    /* Custom chat app colors */
+    --sidebar-primary: #6366F1;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #06B6D4;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #E3E6EA;
+    --sidebar-ring: #6366F1;
+
+    /* Design System Colors */
     --chat-primary: #6366F1;
     --chat-secondary: #8B5CF6;
     --chat-accent: #06B6D4;
     --chat-error: #DF3F40;
     --chat-border: #E3E6EA;
+
+    /* Design System Spacing */
     --chat-spacing: 20px;
     --chat-gutter: 16px;
-    --sidebar-background: 0 0% 98%;
+    --chat-border-radius: 6px;
+
+    /* Typography Scale */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+
+    /* Sidebar */
+    --sidebar-background: #ffffff;
   }
   
   .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
+    /* Dark mode backgrounds */
+    --background: #1a1a1a;
+    --foreground: #ffffff;
+    --card: #2a2a2a;
+    --card-foreground: #ffffff;
+    --popover: #2a2a2a;
+    --popover-foreground: #ffffff;
+
+    /* Design system colors remain consistent in dark mode */
+    --primary: #6366F1;
+    --primary-foreground: #ffffff;
+    --secondary: #8B5CF6;
+    --secondary-foreground: #ffffff;
+    --accent: #06B6D4;
+    --accent-foreground: #ffffff;
+    --destructive: #DF3F40;
+    --destructive-foreground: #ffffff;
+
+    /* Dark mode specific UI colors */
+    --muted: #3a3a3a;
+    --muted-foreground: #a1a1aa;
+    --border: #404040;
+    --input: #2a2a2a;
+    --input-background: #2a2a2a;
+    --switch-background: #404040;
+    --ring: #6366F1;
+
+    /* Typography weights remain consistent */
     --font-weight-medium: 500;
     --font-weight-normal: 400;
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    --sidebar-background: 240 5.9% 10%;
+
+    /* Chart colors for dark mode */
+    --chart-1: #6366F1;
+    --chart-2: #8B5CF6;
+    --chart-3: #06B6D4;
+    --chart-4: #DF3F40;
+    --chart-5: #f59e0b;
+
+    /* Dark mode sidebar */
+    --sidebar: #1a1a1a;
+    --sidebar-foreground: #ffffff;
+    --sidebar-primary: #6366F1;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #06B6D4;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #404040;
+    --sidebar-ring: #6366F1;
+    --sidebar-background: #1a1a1a;
+
+    /* Dark mode design system colors */
+    --chat-primary: #6366F1;
+    --chat-secondary: #8B5CF6;
+    --chat-accent: #06B6D4;
+    --chat-error: #DF3F40;
+    --chat-border: #404040;
   }
 }
 
@@ -143,7 +178,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border border-gray-500;
   }
 
   body {
@@ -224,12 +259,12 @@ html {
 /* Handle */
 ::-webkit-scrollbar-thumb {
   border-radius: 5px;
-  @apply bg-primary-purple;
+  @apply bg-chat-primary;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-secondary-purple;
+  @apply bg-chat-secondary;
 }
 
 @layer base {
