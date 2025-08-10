@@ -229,7 +229,8 @@ export const useWebSocketChannelManagement = () => {
     getTypingUsersInChannel,
     error
   } = useSocketStore();
-  const {activeChannelId } = useChannelStore();
+
+  const { activeChannelId } = useChannelStore();
 
   // Get channel state from channel store
   const {
@@ -237,15 +238,73 @@ export const useWebSocketChannelManagement = () => {
     isInChannel,
   } = useChannelStore();
 
-  // Handle channel switching when channelId changes
-  useEffect(() => {
-    if (isConnected()) {
-      console.log('Channel switching - from:', getCurrentChannelId(), 'to:', activeChannelId);
-      switchChannel(activeChannelId ? String(activeChannelId): null);
-    }
-  }, [activeChannelId, isConnected, switchChannel, getCurrentChannelId]);
+  // Single ref to track the current processing state
+  const processingRef = useRef<{
+    lastActiveChannelId: number | null;
+    lastConnectionState: boolean;
+    isProcessing: boolean;
+  }>({
+    lastActiveChannelId: null,
+    lastConnectionState: false,
+    isProcessing: false
+  });
 
-  // Leave channel when navigating away from chat entirely (component unmount)
+  // Single effect to handle all channel switching logic
+  useEffect(() => {
+    const currentConnected = isConnected();
+    const currentState = processingRef.current;
+
+    console.log('Channel management effect triggered:', {
+      activeChannelId,
+      currentConnected,
+      lastActiveChannelId: currentState.lastActiveChannelId,
+      lastConnectionState: currentState.lastConnectionState,
+      isProcessing: currentState.isProcessing
+    });
+
+    // Prevent concurrent processing
+    if (currentState.isProcessing) {
+      console.log('Already processing channel switch, skipping');
+      return;
+    }
+
+    // Determine if we need to take action
+    const channelChanged = currentState.lastActiveChannelId !== activeChannelId;
+    const connectionEstablished = !currentState.lastConnectionState && currentConnected;
+    const needsChannelSwitch = channelChanged || (connectionEstablished && activeChannelId);
+
+    if (!needsChannelSwitch) {
+      // Update refs even if no action needed
+      currentState.lastActiveChannelId = activeChannelId;
+      currentState.lastConnectionState = currentConnected;
+      return;
+    }
+
+    // Only proceed if connected
+    if (!currentConnected) {
+      console.log('Not connected, updating refs but skipping channel switch');
+      currentState.lastActiveChannelId = activeChannelId;
+      currentState.lastConnectionState = currentConnected;
+      return;
+    }
+
+    // Mark as processing to prevent concurrent calls
+    currentState.isProcessing = true;
+
+    const targetChannelId = activeChannelId ? String(activeChannelId) : null;
+    console.log('Executing single channel switch to:', targetChannelId);
+
+    // Execute the channel switch
+    switchChannel(targetChannelId);
+
+    // Update refs and clear processing flag
+    currentState.lastActiveChannelId = activeChannelId;
+    currentState.lastConnectionState = currentConnected;
+    currentState.isProcessing = false;
+
+  }, [activeChannelId, isConnected, switchChannel]);
+
+  // Separate cleanup effect for component unmount only
   useEffect(() => {
     return () => {
       // Only leave channel if we're navigating away from chat entirely
@@ -253,7 +312,10 @@ export const useWebSocketChannelManagement = () => {
       const currentChannel = getCurrentChannelId();
       if (currentChannel && isConnected()) {
         console.log('Component unmounting - leaving current channel:', currentChannel);
-        switchChannel(null);
+        // Don't use switchChannel here to avoid interference with normal switching
+        // Just leave the current channel directly
+        const { leaveChannel } = useSocketStore.getState();
+        leaveChannel(currentChannel);
       }
     };
   }, []); // Empty dependency array - only runs on mount/unmount

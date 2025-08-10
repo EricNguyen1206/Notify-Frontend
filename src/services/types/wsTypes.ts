@@ -48,6 +48,28 @@ export interface ChannelMessageData {
   fileName?: string | null;
 }
 
+export interface ChannelMessageDataReceived {
+    Channel: any;
+    Receiver: any; // Assuming Receiver can be null
+    Sender: {
+        avatar: string;
+        created_at: string;
+        deleted_at: null | string;
+        email: string;
+        id: number;
+        name: string;
+        updated_at: string;
+    };
+    channelId: number;
+    created_at: string; // ISO 8601 string
+    deleted_at: null | string; // Assuming deleted_at can be a string or null
+    id: number;
+    receiverId: null | number; // Assuming receiverId can be null
+    senderId: number;
+    text: string;
+    updated_at: string; // ISO 8601 string
+};
+
 // Typing indicator data
 export interface TypingIndicatorData {
   channel_id: string;
@@ -109,6 +131,7 @@ export type PongMessage = WsBaseMessage<PingPongData>;
 export type ChannelJoinMessage = WsBaseMessage<ChannelJoinData>;
 export type ChannelLeaveMessage = WsBaseMessage<ChannelLeaveData>;
 export type ChannelMessageMessage = WsBaseMessage<ChannelMessageData>;
+export type ChannelMessageReceivedMessage = WsBaseMessage<ChannelMessageDataReceived>;
 export type TypingIndicatorMessage = WsBaseMessage<TypingIndicatorData>;
 export type MemberJoinMessage = WsBaseMessage<MemberJoinLeaveData>;
 export type MemberLeaveMessage = WsBaseMessage<MemberJoinLeaveData>;

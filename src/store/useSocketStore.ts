@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import {
-    ChannelMessageData,
+    ChannelMessageReceivedMessage,
     ErrorData,
     MemberJoinLeaveData,
     MessageType,
@@ -47,6 +47,13 @@ interface SocketState {
 
   // Configuration
   config: WebSocketClientConfig;
+
+  // Internal state for channel switching
+  _channelSwitchState: {
+    lastSwitchTime: number;
+    pendingChannelId: string | null;
+    isProcessing: boolean;
+  };
 
   // Message data
   messages: WsBaseMessage[];
@@ -97,6 +104,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   connectionState: ConnectionState.DISCONNECTED,
   error: null,
   config: DEFAULT_WS_CONFIG,
+  _channelSwitchState: {
+    lastSwitchTime: 0,
+    pendingChannelId: null,
+    isProcessing: false,
+  },
   messages: [],
   typingUsers: {},
   connectedUsers: {},
@@ -169,8 +181,6 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       const baseWsUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? 'ws://localhost:8080/api/v1';
       await newClient.connect(`${baseWsUrl}/ws`, { userId });
 
-      console.info('WebSocket connected successfully');
-
     } catch (error) {
       console.error('Failed to create or connect WebSocket:', error);
       set({
@@ -197,7 +207,6 @@ export const useSocketStore = create<SocketState>((set, get) => ({
 
     // Connection events
     client.on('onConnect', () => {
-      console.info('WebSocket connected successfully');
       set({ error: null, connectionState: ConnectionState.CONNECTED });
     });
 
@@ -227,28 +236,28 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     });
 
     // Channel message handling
-    client.on('onChannelMessage', (message: WsBaseMessage<ChannelMessageData>) => {
+    client.on('onChannelMessage', (message: ChannelMessageReceivedMessage) => {
       console.info('Channel message received:', message);
 
       const channelMessage = message.data;
       const activeChannelId = useChannelStore.getState().activeChannelId;
 
       // Transform and add to chat store if it's for the active channel
-      if (activeChannelId && channelMessage.channel_id === String(activeChannelId)) {
+      if (activeChannelId && channelMessage.channelId === activeChannelId) {
         const transformedMessage = {
           id: Number(message.id.split('-')[1]) || Date.now(), // Extract numeric ID or use timestamp
-          channelId: Number(channelMessage.channel_id),
+          channelId: Number(channelMessage.channelId),
           createdAt: new Date(message.timestamp).toISOString(),
           senderId: Number(message.user_id),
-          senderName: "Unknown", // Will be populated by the backend message
-          senderAvatar: undefined,
+          senderName: channelMessage.Sender.name, // Will be populated by the backend message
+          senderAvatar: channelMessage.Sender.avatar,
           text: channelMessage.text,
           type: "channel",
-          url: channelMessage.url || undefined,
-          fileName: channelMessage.fileName || undefined
+          url: undefined,
+          fileName: undefined
         };
 
-        useChatStore.getState().addMessageToChannel(channelMessage.channel_id, transformedMessage);
+        useChatStore.getState().addMessageToChannel((channelMessage.channelId).toString(), transformedMessage);
       }
     });
 
@@ -358,29 +367,34 @@ export const useSocketStore = create<SocketState>((set, get) => ({
 
   // Channel actions
   joinChannel: (channelId: string) => {
-    console.log('Joining channel:', channelId);
+    const timestamp = Date.now();
+    console.log(`[${timestamp}] joinChannel called for:`, channelId);
+
     const { client, isConnected } = get();
     const channelStore = useChannelStore.getState();
 
     if (!isConnected() || !channelId || !client) {
-      console.log('Cannot join channel: client not connected or invalid channelId');
+      console.log(`[${timestamp}] Cannot join channel: client not connected or invalid channelId`);
       return;
     }
 
     // Check if already in this channel using channel store
     if (channelStore.isInChannel(channelId)) {
-      console.log('Already in channel:', channelId);
+      console.log(`[${timestamp}] Already in channel:`, channelId);
       return;
     }
 
     try {
+      console.log(`[${timestamp}] Sending WebSocket join message for channel:`, channelId);
       client.joinChannel(channelId);
 
       // Update channel store to track joined channel
+      console.log(`[${timestamp}] Updating channel store state for joined channel:`, channelId);
       channelStore.addJoinedChannel(channelId);
       channelStore.setCurrentChannelId(channelId);
+      console.log(`[${timestamp}] Successfully joined channel:`, channelId);
     } catch (error) {
-      console.error('Error joining channel:', error);
+      console.error(`[${timestamp}] Error joining channel:`, error);
       set({
         error: {
           code: 'JOIN_CHANNEL_FAILED',
@@ -392,25 +406,29 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   },
 
   leaveChannel: (channelId: string) => {
-    console.log('Leaving channel:', channelId);
+    const timestamp = Date.now();
+    console.log(`[${timestamp}] leaveChannel called for:`, channelId);
+
     const { client, isConnected } = get();
     const channelStore = useChannelStore.getState();
 
     if (!isConnected() || !channelId || !client) {
-      console.log('Cannot leave channel: client not connected or invalid channelId');
+      console.log(`[${timestamp}] Cannot leave channel: client not connected or invalid channelId`);
       return;
     }
 
     // Check if actually in this channel using channel store
     if (!channelStore.isInChannel(channelId)) {
-      console.log('Not in channel:', channelId);
+      console.log(`[${timestamp}] Not in channel:`, channelId);
       return;
     }
 
     try {
+      console.log(`[${timestamp}] Sending WebSocket leave message for channel:`, channelId);
       client.sendMessage(MessageType.CHANNEL_LEAVE, { channel_id: channelId });
 
       // Update channel store to remove from joined channels
+      console.log(`[${timestamp}] Updating channel store state for left channel:`, channelId);
       channelStore.removeJoinedChannel(channelId);
 
       // Clear typing indicators for this channel
@@ -419,8 +437,10 @@ export const useSocketStore = create<SocketState>((set, get) => ({
         delete newTypingUsers[channelId];
         return { typingUsers: newTypingUsers };
       });
+
+      console.log(`[${timestamp}] Successfully left channel:`, channelId);
     } catch (error) {
-      console.error('Error leaving channel:', error);
+      console.error(`[${timestamp}] Error leaving channel:`, error);
       set({
         error: {
           code: 'LEAVE_CHANNEL_FAILED',
@@ -431,35 +451,97 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     }
   },
 
-  // New method for proper channel switching
+  // New method for proper channel switching with debouncing
   switchChannel: (newChannelId: string | null) => {
-    console.log('Switching channel to:', newChannelId);
-    const { isConnected } = get();
+    const timestamp = Date.now();
+    const state = get();
+    const switchState = state._channelSwitchState;
+
+    console.log(`[${timestamp}] switchChannel called with:`, newChannelId, {
+      isProcessing: switchState.isProcessing,
+      lastSwitchTime: switchState.lastSwitchTime,
+      pendingChannelId: switchState.pendingChannelId
+    });
+
+    // Prevent rapid successive calls (debounce with 100ms)
+    const timeSinceLastSwitch = timestamp - switchState.lastSwitchTime;
+    if (switchState.isProcessing || timeSinceLastSwitch < 100) {
+      console.log(`[${timestamp}] Debouncing channel switch (${timeSinceLastSwitch}ms since last)`);
+
+      // Update pending channel if it's different
+      if (switchState.pendingChannelId !== newChannelId) {
+        set(state => ({
+          _channelSwitchState: {
+            ...state._channelSwitchState,
+            pendingChannelId: newChannelId
+          }
+        }));
+
+        // Schedule the pending switch
+        setTimeout(() => {
+          const currentState = get();
+          if (currentState._channelSwitchState.pendingChannelId === newChannelId) {
+            console.log(`[${Date.now()}] Executing pending channel switch to:`, newChannelId);
+            get().switchChannel(newChannelId);
+          }
+        }, 150);
+      }
+      return;
+    }
+
     const channelStore = useChannelStore.getState();
     const currentChannelId = channelStore.getCurrentChannelId();
 
-    if (!isConnected()) {
-      console.log('Cannot switch channel: not connected');
+    if (!state.isConnected()) {
+      console.log(`[${timestamp}] Cannot switch channel: not connected`);
       return;
     }
 
     // If switching to the same channel, do nothing
     if (currentChannelId === newChannelId) {
-      console.log('Already in target channel:', newChannelId);
+      console.log(`[${timestamp}] Already in target channel:`, newChannelId);
       return;
     }
 
-    // Leave current channel if we're in one
-    if (currentChannelId) {
-      get().leaveChannel(currentChannelId);
-    }
+    // Mark as processing and update state
+    set(() => ({
+      _channelSwitchState: {
+        lastSwitchTime: timestamp,
+        pendingChannelId: null,
+        isProcessing: true
+      }
+    }));
 
-    // Join new channel if specified
-    if (newChannelId) {
-      get().joinChannel(newChannelId);
-    } else {
-      // Just update current channel to null if no new channel
-      channelStore.setCurrentChannelId(null);
+    console.log(`[${timestamp}] Executing channel switch from "${currentChannelId}" to "${newChannelId}"`);
+
+    try {
+      // Leave current channel if we're in one
+      if (currentChannelId) {
+        console.log(`[${timestamp}] Leaving current channel:`, currentChannelId);
+        get().leaveChannel(currentChannelId);
+      }
+
+      // Join new channel if specified
+      if (newChannelId) {
+        console.log(`[${timestamp}] Joining new channel:`, newChannelId);
+        get().joinChannel(newChannelId);
+      } else {
+        // Just update current channel to null if no new channel
+        console.log(`[${timestamp}] Setting current channel to null`);
+        channelStore.setCurrentChannelId(null);
+      }
+
+      console.log(`[${timestamp}] Channel switch completed successfully`);
+    } catch (error) {
+      console.error(`[${timestamp}] Error during channel switch:`, error);
+    } finally {
+      // Clear processing flag
+      set(state => ({
+        _channelSwitchState: {
+          ...state._channelSwitchState,
+          isProcessing: false
+        }
+      }));
     }
   },
 
@@ -487,7 +569,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       // Clear channel store state
       const channelStore = useChannelStore.getState();
       channelStore.clearJoinedChannels();
-
+      // Add window confirm to block reload and test disconnect
+      const confirm = window.confirm('Are you sure you want to leave?');
+    if (!confirm) {
+        return;
+    }
       client.disconnect();
       set({
         client: null,
