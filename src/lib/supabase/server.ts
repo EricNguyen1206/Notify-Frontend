@@ -30,14 +30,17 @@ export async function createClientForServer() {
 }
 
 export const getUser = async () => {
-  const auth = getSupabaseAuth();
-  const user = (await auth.getUser()).data.user;
-
+  const auth = await getSupabaseAuth();
+  const { data: { user }, error } = await auth.getUser();
+  if (error) {
+    // Optionally log or throw. Returning null preserves the current return shape.
+    return null;
+  }
   return user;
 };
 
-export const getSupabaseAuth = () => {
-  const cookieStore = cookies();
+export const getSupabaseAuth =  async () => {
+  const cookieStore = await cookies();
 
   const supabaseClient = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,7 +48,7 @@ export const getSupabaseAuth = () => {
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          return cookieStore?.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
           try {

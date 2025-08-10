@@ -151,8 +151,6 @@ export interface GormDeletedAt {
  */
 export type WebSocketMessageType = typeof WebSocketMessageType[keyof typeof WebSocketMessageType];
 
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const WebSocketMessageType = {
   connectionconnect: 'connection.connect',
   connectiondisconnect: 'connection.disconnect',
