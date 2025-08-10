@@ -30,9 +30,12 @@ export async function createClientForServer() {
 }
 
 export const getUser = async () => {
-  const auth = getSupabaseAuth();
-  const user = (await ((await auth).getUser())).data.user;
-
+  const auth = await getSupabaseAuth();
+  const { data: { user }, error } = await auth.getUser();
+  if (error) {
+    // Optionally log or throw. Returning null preserves the current return shape.
+    return null;
+  }
   return user;
 };
 
