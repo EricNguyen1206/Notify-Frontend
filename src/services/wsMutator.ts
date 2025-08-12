@@ -57,12 +57,24 @@ export const isWsBaseMessage = (data: unknown): data is WsBaseMessage => {
   );
 };
 
+// Message queue item interface
+export interface QueuedMessage {
+  message: WsBaseMessage;
+  timestamp: number;
+  retries: number;
+  maxRetries: number;
+}
+
 // WebSocket client configuration
 export interface WebSocketClientConfig {
   reconnectAttempts?: number;
   reconnectDelay?: number;
+  maxReconnectDelay?: number;
   heartbeatInterval?: number;
   connectionTimeout?: number;
+  messageQueueLimit?: number;
+  messageCacheSize?: number;
+  enableJitter?: boolean;
 }
 
 // Event listeners interface
@@ -87,20 +99,100 @@ export class TypeSafeWebSocketClient {
   private reconnectAttempts = 0;
   private maxReconnectAttempts: number;
   private reconnectDelay: number;
+  private maxReconnectDelay: number;
   private heartbeatInterval: number;
   private connectionTimeout: number;
+  private messageQueueLimit: number;
+  private messageCacheSize: number;
+  private enableJitter: boolean;
+
+  // Timers
   private heartbeatTimer: NodeJS.Timeout | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private connectionTimer: NodeJS.Timeout | null = null;
+
+  // Message handling
+  private messageQueue: QueuedMessage[] = [];
+  private processedMessages = new Set<string>();
+  private connectionStartTime = 0;
+
+  // Event listeners and state
   private listeners: WebSocketEventListeners = {};
   private url = '';
   private params: Record<string, any> = {};
+  private isPageVisible = true;
 
   constructor(config: WebSocketClientConfig = {}) {
     this.maxReconnectAttempts = config.reconnectAttempts ?? 5;
     this.reconnectDelay = config.reconnectDelay ?? 1000;
+    this.maxReconnectDelay = config.maxReconnectDelay ?? 30000;
     this.heartbeatInterval = config.heartbeatInterval ?? 30000;
     this.connectionTimeout = config.connectionTimeout ?? 10000;
+    this.messageQueueLimit = config.messageQueueLimit ?? 100;
+    this.messageCacheSize = config.messageCacheSize ?? 1000;
+    this.enableJitter = config.enableJitter ?? true;
+
+    // Setup page visibility and network monitoring
+    this.setupPageVisibilityHandling();
+    this.setupNetworkMonitoring();
+  }
+
+  // Page visibility and network monitoring setup
+  private setupPageVisibilityHandling(): void {
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        this.isPageVisible = document.visibilityState === 'visible';
+
+        if (this.isPageVisible) {
+          this.handlePageVisible();
+        } else {
+          this.handlePageHidden();
+        }
+      });
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => {
+        this.disconnect();
+      });
+    }
+  }
+
+  private setupNetworkMonitoring(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => {
+        console.log('Network came back online');
+        if (this.connectionState !== ConnectionState.CONNECTED) {
+          this.connect(this.url, this.params);
+        }
+      });
+
+      window.addEventListener('offline', () => {
+        console.log('Network went offline');
+        this.setConnectionState(ConnectionState.DISCONNECTED);
+      });
+    }
+  }
+
+  private handlePageVisible(): void {
+    if (this.connectionState === ConnectionState.DISCONNECTED ||
+        this.connectionState === ConnectionState.ERROR) {
+      console.log('Page became visible, reconnecting...');
+      this.connect(this.url, this.params);
+    } else if (this.connectionState === ConnectionState.CONNECTED) {
+      // Resume heartbeat if connection is still alive
+      this.startHeartbeat();
+    }
+  }
+
+  private handlePageHidden(): void {
+    // Don't disconnect immediately, just stop heartbeat to conserve resources
+    this.stopHeartbeat();
+  }
+
+  // Event listener management
+  setEventListeners(listeners: WebSocketEventListeners): void {
+    this.listeners = { ...this.listeners, ...listeners };
   }
 
   // Connection management
@@ -129,7 +221,9 @@ export class TypeSafeWebSocketClient {
           this.clearConnectionTimer();
           this.setConnectionState(ConnectionState.CONNECTED);
           this.reconnectAttempts = 0;
+          this.connectionStartTime = Date.now();
           this.startHeartbeat();
+          this.flushMessageQueue(); // Send any queued messages
           this.listeners.onConnect?.();
           resolve();
         };
@@ -170,21 +264,34 @@ export class TypeSafeWebSocketClient {
     this.ws = null;
   }
 
-  // Message sending methods
-  sendMessage<T>(type: MessageType, data: T): void {
-    if (!this.isConnected()) {
-      throw new Error('WebSocket is not connected');
-    }
+  // Message sending methods with queuing support
+  sendMessage<T>(type: MessageType, data: T): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const message: WsBaseMessage<T> = {
+        id: this.generateMessageId(),
+        type,
+        data,
+        timestamp: Date.now(),
+        user_id: this.params.userId || ''
+      };
 
-    const message: WsBaseMessage<T> = {
-      id: this.generateMessageId(),
-      type,
-      data,
-      timestamp: Date.now(),
-      user_id: this.params.userId || ''
-    };
-
-    this.ws!.send(JSON.stringify(message));
+      if (this.isConnected() && this.ws) {
+        try {
+          this.ws.send(JSON.stringify(message));
+          resolve();
+        } catch (error) {
+          console.error('Failed to send message, queuing:', error);
+          this.queueMessage(message as WsBaseMessage);
+          reject(error);
+        }
+      } else {
+        // Queue message when not connected
+        console.log('Not connected, queuing message:', type);
+        this.queueMessage(message as WsBaseMessage);
+        // Resolve immediately for queued messages (optimistic response)
+        resolve();
+      }
+    });
   }
 
   joinChannel(channelId: string): void {
@@ -241,7 +348,7 @@ export class TypeSafeWebSocketClient {
     }
   }
 
-  // Message handling
+  // Message handling with deduplication
   private handleMessage(event: MessageEvent): void {
     try {
       const data = JSON.parse(event.data);
@@ -251,9 +358,35 @@ export class TypeSafeWebSocketClient {
         return;
       }
 
+      // Message deduplication
+      if (data.id && this.processedMessages.has(data.id)) {
+        console.log('Duplicate message ignored:', data.id);
+        return;
+      }
+
+      if (data.id) {
+        this.processedMessages.add(data.id);
+
+        // Limit cache size to prevent memory leaks
+        if (this.processedMessages.size > this.messageCacheSize) {
+          const firstId = this.processedMessages.values().next().value;
+          if (firstId) {
+            this.processedMessages.delete(firstId);
+          }
+        }
+      }
+
       // Handle pong messages for heartbeat
       if (data.type === WsMessageType.PONG) {
+        console.log('Received pong response');
         return; // Heartbeat response, no need to emit
+      }
+
+      // Handle connection success message
+      if (data.type === 'connection.connect') {
+        console.log('Connection established:', data);
+        this.connectionStartTime = Date.now();
+        return;
       }
 
       // Emit generic message event
@@ -281,12 +414,67 @@ export class TypeSafeWebSocketClient {
           this.listeners.onUserNotification?.(data as WsBaseMessage<UserNotificationData>);
           break;
         case WsMessageType.ERROR:
-          console.log('WebSocket error message:', data);
+          console.error('WebSocket error message:', data);
+          this.listeners.onError?.(new Event('websocket-error'));
           break;
       }
     } catch (error) {
       console.error('Failed to parse WebSocket message:', error, event.data);
     }
+  }
+
+  // Message queuing for offline scenarios
+  private queueMessage(message: WsBaseMessage): void {
+    const queuedMessage: QueuedMessage = {
+      message: {
+        ...message,
+        id: message.id || this.generateMessageId(),
+        timestamp: Date.now()
+      },
+      timestamp: Date.now(),
+      retries: 0,
+      maxRetries: 3
+    };
+
+    this.messageQueue.push(queuedMessage);
+
+    // Limit queue size to prevent memory issues
+    if (this.messageQueue.length > this.messageQueueLimit) {
+      this.messageQueue.shift(); // Remove oldest message
+      console.warn('Message queue limit reached, removing oldest message');
+    }
+  }
+
+  private flushMessageQueue(): void {
+    console.log(`Flushing ${this.messageQueue.length} queued messages`);
+
+    while (this.messageQueue.length > 0 && this.connectionState === ConnectionState.CONNECTED) {
+      const queuedItem = this.messageQueue.shift();
+      if (queuedItem) {
+        try {
+          if (this.ws) {
+            this.ws.send(JSON.stringify(queuedItem.message));
+            console.log('Sent queued message:', queuedItem.message.type);
+          }
+        } catch (error) {
+          console.error('Failed to send queued message:', error);
+
+          // Re-queue if under retry limit
+          if (queuedItem.retries < queuedItem.maxRetries) {
+            queuedItem.retries++;
+            this.messageQueue.unshift(queuedItem);
+            console.log(`Re-queued message (retry ${queuedItem.retries}/${queuedItem.maxRetries})`);
+          } else {
+            console.error('Max retries reached for queued message, dropping:', queuedItem.message);
+          }
+          break; // Stop processing queue on error
+        }
+      }
+    }
+  }
+
+  private generateMessageId(): string {
+    return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   // Heartbeat mechanism
@@ -306,7 +494,7 @@ export class TypeSafeWebSocketClient {
     }
   }
 
-  // Reconnection logic
+  // Reconnection logic with exponential backoff and jitter
   private attemptReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('Max reconnection attempts reached');
@@ -317,16 +505,24 @@ export class TypeSafeWebSocketClient {
     this.reconnectAttempts++;
     this.setConnectionState(ConnectionState.RECONNECTING);
 
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1); // Exponential backoff
+    // Exponential backoff with jitter
+    const baseDelay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    const cappedDelay = Math.min(baseDelay, this.maxReconnectDelay);
+    const jitter = this.enableJitter ? Math.random() * 1000 : 0; // Add up to 1 second jitter
+    const finalDelay = cappedDelay + jitter;
+
+    console.log(`Reconnecting in ${finalDelay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 
     this.reconnectTimer = setTimeout(async () => {
       try {
+        console.log(`Attempting reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
         await this.connect(this.url, this.params);
+        console.log('Reconnection successful');
       } catch (error) {
         console.error('Reconnection failed:', error);
         this.attemptReconnect();
       }
-    }, delay);
+    }, finalDelay);
   }
 
   // Utility methods
@@ -345,14 +541,10 @@ export class TypeSafeWebSocketClient {
       this.connectionTimer = null;
     }
   }
-
-  private generateMessageId(): string {
-    return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-  }
 }
 
 // Factory function for Orval compatibility
-export const createWebSocketClient = <T = unknown>(
+export const createWebSocketClient = (
   config: { url: string; method: string; params?: Record<string, any> },
   options?: WebSocketClientConfig
 ): TypeSafeWebSocketClient => {

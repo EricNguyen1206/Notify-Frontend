@@ -3,6 +3,7 @@
 import { useScreenDimensions } from "@/hooks/useScreenDimensions";
 import { useGetMessagesChannelId } from "@/services/endpoints/chats/chats";
 import { ChatServiceInternalModelsChatResponse } from "@/services/schemas";
+import { ConnectionState } from "@/services/websocket";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChannelStore } from "@/store/useChannelStore";
 import { Message, useChatStore } from "@/store/useChatStore";
@@ -251,7 +252,7 @@ export const useWebSocketChannelManagement = () => {
 
   // Single effect to handle all channel switching logic
   useEffect(() => {
-    const currentConnected = isConnected();
+    const currentConnected = Boolean(client?.isConnected() && connectionState === ConnectionState.CONNECTED);
     const currentState = processingRef.current;
 
     console.log('Channel management effect triggered:', {
@@ -272,14 +273,14 @@ export const useWebSocketChannelManagement = () => {
     const channelChanged = currentState.lastActiveChannelId !== activeChannelId;
     const connectionEstablished = !currentState.lastConnectionState && currentConnected;
     const needsChannelSwitch = channelChanged || (connectionEstablished && activeChannelId);
-
+    console.log('TEST 1 Channel changed:', channelChanged);
     if (!needsChannelSwitch) {
       // Update refs even if no action needed
       currentState.lastActiveChannelId = activeChannelId;
       currentState.lastConnectionState = currentConnected;
       return;
     }
-
+    console.log("TEST 2", currentConnected)
     // Only proceed if connected
     if (!currentConnected) {
       console.log('Not connected, updating refs but skipping channel switch');
@@ -287,6 +288,7 @@ export const useWebSocketChannelManagement = () => {
       currentState.lastConnectionState = currentConnected;
       return;
     }
+    console.log("TEST 3")
 
     // Mark as processing to prevent concurrent calls
     currentState.isProcessing = true;
@@ -302,7 +304,7 @@ export const useWebSocketChannelManagement = () => {
     currentState.lastConnectionState = currentConnected;
     currentState.isProcessing = false;
 
-  }, [activeChannelId, isConnected, switchChannel]);
+  }, [activeChannelId, client, connectionState, switchChannel]);
 
   // Separate cleanup effect for component unmount only
   useEffect(() => {

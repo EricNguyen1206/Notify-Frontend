@@ -116,6 +116,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   // Computed functions
   isConnected: () => {
     const { client, connectionState } = get();
+    console.log("TEST isConnected", connectionState, client?.isConnected())
     return connectionState === ConnectionState.CONNECTED && client?.isConnected() === true;
   },
 
@@ -199,131 +200,135 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     const { client } = get();
     if (!client) return;
 
-    // Connection state changes
-    client.on('onConnectionStateChange', (state: ConnectionState) => {
-      console.log('Connection state changed:', state);
-      set({ connectionState: state });
-    });
+    // Set up event listeners using the proper WebSocketEventListeners interface
+    client.setEventListeners({
+      // Connection state changes
+      onConnectionStateChange: (state: ConnectionState) => {
+        console.log('Connection state changed:', state);
+        set({ connectionState: state });
+      },
 
-    // Connection events
-    client.on('onConnect', () => {
-      set({ error: null, connectionState: ConnectionState.CONNECTED });
-    });
+      // Connection events
+      onConnect: () => {
+        console.log('WebSocket connected successfully');
+        set({ error: null, connectionState: ConnectionState.CONNECTED });
+      },
 
-    client.on('onDisconnect', () => {
-      console.info('WebSocket disconnected');
-      set({ connectionState: ConnectionState.DISCONNECTED });
-    });
+      onDisconnect: () => {
+        console.info('WebSocket disconnected');
+        set({ connectionState: ConnectionState.DISCONNECTED });
+      },
 
-    client.on('onError', (error) => {
-      console.error('WebSocket error:', error);
-      set({
-        error: {
-          code: 'WEBSOCKET_ERROR',
-          message: 'WebSocket connection error',
-          details: error.toString()
-        },
-        connectionState: ConnectionState.ERROR
-      });
-    });
-
-    // Message handling
-    client.on('onMessage', (message: WsBaseMessage) => {
-      console.info('WebSocket message received:', message);
-      set((state) => ({
-        messages: [...state.messages, message]
-      }));
-    });
-
-    // Channel message handling
-    client.on('onChannelMessage', (message: ChannelMessageReceivedMessage) => {
-      console.info('Channel message received:', message);
-
-      const channelMessage = message.data;
-      const activeChannelId = useChannelStore.getState().activeChannelId;
-
-      // Transform and add to chat store if it's for the active channel
-      if (activeChannelId && channelMessage.channelId === activeChannelId) {
-        const transformedMessage = {
-          id: Number(message.id.split('-')[1]) || Date.now(), // Extract numeric ID or use timestamp
-          channelId: Number(channelMessage.channelId),
-          createdAt: new Date(message.timestamp).toISOString(),
-          senderId: Number(message.user_id),
-          senderName: channelMessage.Sender.name, // Will be populated by the backend message
-          senderAvatar: channelMessage.Sender.avatar,
-          text: channelMessage.text,
-          type: "channel",
-          url: undefined,
-          fileName: undefined
-        };
-
-        useChatStore.getState().addMessageToChannel((channelMessage.channelId).toString(), transformedMessage);
-      }
-    });
-
-    // Typing indicator handling
-    client.on('onTypingIndicator', (message: WsBaseMessage<TypingIndicatorData>) => {
-      const { channel_id, is_typing } = message.data;
-      const userId = message.user_id;
-
-      if (is_typing) {
-        // Add typing indicator
-        set((state) => {
-          const channelTyping = state.typingUsers[channel_id] || [];
-          const existingIndex = channelTyping.findIndex(t => t.userId === userId);
-
-          const newTypingState: TypingState = {
-            channelId: channel_id,
-            userId,
-            isTyping: true,
-            timestamp: message.timestamp
-          };
-
-          if (existingIndex >= 0) {
-            channelTyping[existingIndex] = newTypingState;
-          } else {
-            channelTyping.push(newTypingState);
-          }
-
-          return {
-            typingUsers: {
-              ...state.typingUsers,
-              [channel_id]: channelTyping
-            }
-          };
+      onError: (error) => {
+        console.error('WebSocket error:', error);
+        set({
+          error: {
+            code: 'WEBSOCKET_ERROR',
+            message: 'WebSocket connection error',
+            details: error.toString()
+          },
+          connectionState: ConnectionState.ERROR
         });
-      } else {
-        // Remove typing indicator
-        get().clearTypingIndicator(channel_id, userId);
-      }
-    });
+      },
 
-    // Member join/leave handling
-    client.on('onMemberJoin', (message: WsBaseMessage<MemberJoinLeaveData>) => {
-      console.info('Member joined:', message.data);
-      // Could update channel member list here
-    });
+      // Message handling
+      onMessage: (message: WsBaseMessage) => {
+        console.info('WebSocket message received:', message);
+        set((state) => ({
+          messages: [...state.messages, message]
+        }));
+      },
 
-    client.on('onMemberLeave', (message: WsBaseMessage<MemberJoinLeaveData>) => {
-      console.info('Member left:', message.data);
-      // Could update channel member list here
-    });
+      // Channel message handling
+      onChannelMessage: (message: ChannelMessageReceivedMessage) => {
+        console.info('Channel message received:', message);
 
-    // User status handling
-    client.on('onUserStatus', (message: WsBaseMessage<UserStatusData>) => {
-      const userData = message.data;
-      set((state) => ({
-        connectedUsers: {
-          ...state.connectedUsers,
-          [userData.user_id]: userData
+        const channelMessage = message.data;
+        const activeChannelId = useChannelStore.getState().activeChannelId;
+
+        // Transform and add to chat store if it's for the active channel
+        if (activeChannelId && channelMessage.channelId === activeChannelId) {
+          const transformedMessage = {
+            id: Number(message.id.split('-')[1]) || Date.now(), // Extract numeric ID or use timestamp
+            channelId: Number(channelMessage.channelId),
+            createdAt: new Date(message.timestamp).toISOString(),
+            senderId: Number(message.user_id),
+            senderName: channelMessage.Sender.name, // Will be populated by the backend message
+            senderAvatar: channelMessage.Sender.avatar,
+            text: channelMessage.text,
+            type: "channel",
+            url: undefined,
+            fileName: undefined
+          };
+
+          useChatStore.getState().addMessageToChannel((channelMessage.channelId).toString(), transformedMessage);
         }
-      }));
-    });
+      },
 
-    // User notification handling
-    client.on('onUserNotification', (message: WsBaseMessage<UserNotificationData>) => {
-      console.info('User notification:', message.data);
-      // Could trigger UI notifications here
+      // Typing indicator handling
+      onTypingIndicator: (message: WsBaseMessage<TypingIndicatorData>) => {
+        const { channel_id, is_typing } = message.data;
+        const userId = message.user_id;
+
+        if (is_typing) {
+          // Add typing indicator
+          set((state) => {
+            const channelTyping = state.typingUsers[channel_id] || [];
+            const existingIndex = channelTyping.findIndex(t => t.userId === userId);
+
+            const newTypingState: TypingState = {
+              channelId: channel_id,
+              userId,
+              isTyping: true,
+              timestamp: message.timestamp
+            };
+
+            if (existingIndex >= 0) {
+              channelTyping[existingIndex] = newTypingState;
+            } else {
+              channelTyping.push(newTypingState);
+            }
+
+            return {
+              typingUsers: {
+                ...state.typingUsers,
+                [channel_id]: channelTyping
+              }
+            };
+          });
+        } else {
+          // Remove typing indicator
+          get().clearTypingIndicator(channel_id, userId);
+        }
+      },
+
+      // Member join/leave handling
+      onMemberJoin: (message: WsBaseMessage<MemberJoinLeaveData>) => {
+        console.info('Member joined:', message.data);
+        // Could update channel member list here
+      },
+
+      onMemberLeave: (message: WsBaseMessage<MemberJoinLeaveData>) => {
+        console.info('Member left:', message.data);
+        // Could update channel member list here
+      },
+
+      // User status handling
+      onUserStatus: (message: WsBaseMessage<UserStatusData>) => {
+        const userData = message.data;
+        set((state) => ({
+          connectedUsers: {
+            ...state.connectedUsers,
+            [userData.user_id]: userData
+          }
+        }));
+      },
+
+      // User notification handling
+      onUserNotification: (message: WsBaseMessage<UserNotificationData>) => {
+        console.info('User notification:', message.data);
+        // Could trigger UI notifications here
+      }
     });
   },
 
