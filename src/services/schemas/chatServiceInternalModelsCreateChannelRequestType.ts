@@ -6,11 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export type ChatServiceInternalModelsCreateChannelRequestType = typeof ChatServiceInternalModelsCreateChannelRequestType[keyof typeof ChatServiceInternalModelsCreateChannelRequestType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ChatServiceInternalModelsCreateChannelRequestType = {
-  direct: 'direct',
-  group: 'group',
-} as const;
+export enum ChatServiceInternalModelsCreateChannelRequestType {
+  direct = 'direct',
+  group = 'group',
+};

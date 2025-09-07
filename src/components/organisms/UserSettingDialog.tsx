@@ -49,13 +49,14 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children, open, onO
   const updateProfileMutation = usePutUsersProfile({
     mutation: {
       onSuccess: (data) => {
+        if (!profile) return;
         toast.success("Profile updated successfully");
         // Update local state
         updateUser({
-          id: data.data.id ?? profile?.id!,
-          email: data.data.email ?? profile?.email!,
-          username: data.data.username ?? profile?.username!,
-          avatar: data.data.avatar ?? profile?.avatar,
+          id: data.data.id ?? profile.id,
+          email: data.data.email ?? profile.email,
+          username: data.data.username ?? profile.username,
+          avatar: data.data.avatar ?? profile.avatar,
         });
         // Reset form
         setFormData({

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { usePostChannels } from "@/services/endpoints/channels/channels";
 import type {
   ChatServiceInternalModelsCreateChannelRequest,
+  ChatServiceInternalModelsCreateChannelRequestType,
   ChatServiceInternalModelsUserResponse,
 } from "@/services/schemas";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -144,7 +145,7 @@ export const useCreateChannel = (options: UseCreateChannelOptions = {}) => {
 
       const requestBody: ChatServiceInternalModelsCreateChannelRequest = {
         name: dataToSubmit.name.trim() || "", // Backend will auto-generate name for direct messages
-        type: dataToSubmit.type,
+        type: dataToSubmit.type as ChatServiceInternalModelsCreateChannelRequestType,
         userIds: [...new Set(userIds)], // Remove duplicates
       };
 

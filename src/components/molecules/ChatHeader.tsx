@@ -1,7 +1,12 @@
+'use client';
+import { useDeleteChannelsId, usePutChannelsIdUser } from "@/services/endpoints/channels/channels";
+import { useChannelStore } from "@/store/useChannelStore";
+import { useSocketStore } from "@/store/useSocketStore";
+import { Eye, LogOut, MoreHorizontal, Trash2, Users, Video } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Users, Video, MoreHorizontal, Eye, Trash2, LogOut } from "lucide-react";
+import { toast } from "react-toastify";
 import { Button } from "../ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,12 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import ViewMembersDialog from "./ViewMembersDialog";
-import { usePutChannelsIdUser, useDeleteChannelsId } from "@/services/endpoints/channels/channels";
-import { useRouter } from "next/navigation";
-import { useChannelStore } from "@/store/useChannelStore";
-import { useSocketStore } from "@/store/useSocketStore";
-import { toast } from "react-toastify";
 
 interface ChatHeaderProps {
   id: string;
