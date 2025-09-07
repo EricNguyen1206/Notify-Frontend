@@ -6,13 +6,16 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface ChatServiceInternalModelsRegisterRequest {
-  email: string;
+export interface ChatServiceInternalModelsUpdateProfileRequest {
+  /** Optional avatar URL */
+  avatar?: string;
+  /** Required current password for verification */
+  current_password: string;
   /** @minLength 6 */
-  password: string;
+  password?: string;
   /**
    * @minLength 3
    * @maxLength 50
    */
-  username: string;
+  username?: string;
 }

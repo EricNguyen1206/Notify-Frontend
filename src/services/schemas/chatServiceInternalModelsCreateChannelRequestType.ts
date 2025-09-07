@@ -6,4 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export type PutChannelsIdBody = {[key: string]: string};
+export enum ChatServiceInternalModelsCreateChannelRequestType {
+  direct = 'direct',
+  group = 'group',
+};
