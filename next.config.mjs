@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for Docker optimization
+  output: "standalone",
+  reactStrictMode: false,
+
   images: {
     remotePatterns: [
       {
@@ -8,13 +12,14 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      },
-      {
-        protocol: "https",
         hostname: "avatars.githubusercontent.com",
       },
     ],
+  },
+
+  // Experimental features (if needed)
+  experimental: {
+    // Add any experimental features here if needed
   },
 };
 
