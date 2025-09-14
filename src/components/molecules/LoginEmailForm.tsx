@@ -89,11 +89,11 @@ const LoginEmailForm = () => {
           required
         />
       </div>
-      <Link href={"/forgot-password"}>
-        <p className="text-xs text-chat-accent hover:underline hover:underline-offset-1 font-normal">
-          Forgot your password?
-        </p>
-      </Link>
+      {/* <Link href={"/forgot-password"}> */}
+      <p className="text-xs text-chat-accent hover:underline hover:underline-offset-1 font-normal">
+        Forgot your password?
+      </p>
+      {/* </Link> */}
       <button
         type="submit"
         className="bg-chat-primary text-white py-3 rounded-chat font-medium hover:bg-chat-secondary transition-colors disabled:opacity-50"

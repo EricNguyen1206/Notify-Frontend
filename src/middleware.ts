@@ -4,10 +4,10 @@ export default function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Define public paths that don't require authentication
-  const PUBLIC_PATHS = ["/login", "/register", "/api", "/forgot-password"];
+  const PUBLIC_PATHS = ["/login", "/register", "/api"];
 
   // Define auth paths that authenticated users shouldn't access
-  const AUTH_PATHS = ["/login", "/register", "/forgot-password"];
+  const AUTH_PATHS = ["/login", "/register"];
 
   // Get token from cookies
   const token = req.cookies.get("token")?.value;

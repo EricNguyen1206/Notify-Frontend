@@ -1,8 +1,8 @@
 "use client";
 
 import { useScreenDimensions } from "@/hooks/useScreenDimensions";
-import { useGetMessagesChannelId } from "@/services/endpoints/chats/chats";
 import { useGetChannelsId } from "@/services/endpoints/channels/channels";
+import { useGetMessagesChannelId } from "@/services/endpoints/chats/chats";
 import { ChatServiceInternalModelsChatResponse } from "@/services/schemas";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChannelStore } from "@/store/useChannelStore";
@@ -123,13 +123,13 @@ export const useChatData = (channelId: number | undefined) => {
   // Get messages from chat store for current channel
   const storeMessages = useMemo(() => (channelId ? channels[String(channelId)] || [] : []), [channels]);
   // Transform API data to Message format
-  const chats: Message[] = [
+  const chats: Message[] = useMemo(() => [
     ...(Array.isArray(chatsData?.data.items)
       ? chatsData.data.items.map((chat: ChatServiceInternalModelsChatResponse) => chat as Message)
       : []),
     // ...optimisticChats,
     ...storeMessages, // Include messages from WebSocket
-  ] as Message[];
+  ] as Message[], [chatsData, storeMessages]);
 
   return {
     chats,
@@ -275,7 +275,7 @@ export const useMessageSending = (
 
 // Hook for handling incoming WebSocket messages
 export const useWebSocketMessageHandler = (channelId: number | undefined) => {
-  const { upsertMessageToChannel } = useChatStore();
+  const { addMessageToChannel } = useChatStore();
 
   useEffect(() => {
     const handleChatMessage = (event: CustomEvent<ChatMessage>) => {
@@ -298,7 +298,7 @@ export const useWebSocketMessageHandler = (channelId: number | undefined) => {
         };
 
         // Add message to chat store
-        upsertMessageToChannel(String(channelId), message);
+        addMessageToChannel(String(channelId), message);
       }
     };
 
@@ -308,7 +308,7 @@ export const useWebSocketMessageHandler = (channelId: number | undefined) => {
     return () => {
       window.removeEventListener("chat-message", handleChatMessage as EventListener);
     };
-  }, [channelId, upsertMessageToChannel]);
+  }, [channelId, addMessageToChannel]);
 };
 
 // Main hook that combines all other hooks

@@ -5,8 +5,8 @@
 
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { useChatStore } from "./useChatStore";
 import { useChannelStore } from "./useChannelStore";
+import { useChatStore } from "./useChatStore";
 
 // WebSocket connection states
 export enum ConnectionState {
@@ -449,7 +449,7 @@ export const useSocketStore = create<SocketState>()(
 
           // Add message to chat store
           const chatStore = useChatStore.getState();
-          chatStore.upsertMessageToChannel(String(chatMessage.channelId), chatMessage);
+          chatStore.addMessageToChannel(String(chatMessage.channelId), chatMessage);
 
           // Dispatch custom event for components to listen to
           window.dispatchEvent(
