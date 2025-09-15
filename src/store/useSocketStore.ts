@@ -442,9 +442,9 @@ export const useSocketStore = create<SocketState>()(
             senderAvatar: messageData.Sender?.Avatar || messageData.Sender?.avatar || "",
             text: messageData.Text || messageData.text || "",
             createdAt: messageData.CreatedAt || new Date().toISOString(),
-            type: "group",
-            url: messageData.URL || undefined,
-            fileName: messageData.FileName || undefined,
+            type: message.type || "group",
+            url: messageData.url || undefined,
+            fileName: messageData.fileName || undefined,
           };
 
           // Add message to chat store

@@ -1,4 +1,5 @@
 import { Message } from "@/store/useChatStore";
+import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export default function MessageBubble({
@@ -16,7 +17,19 @@ export default function MessageBubble({
       <div className="flex justify-end mb-chat-gutter">
         <div className="max-w-xs lg:max-w-md">
           <div className="bg-chat-primary text-white rounded-chat px-4 py-2">
-            <p className="break-words font-normal">{message.text}</p>
+            {message.url && (
+              <div className="mb-2">
+                <Image
+                  src={message.url}
+                  alt={message.fileName || "Image"}
+                  width={200}
+                  height={200}
+                  className="rounded-lg max-w-full h-auto"
+                  unoptimized
+                />
+              </div>
+            )}
+            {message.text && <p className="break-words font-normal">{message.text}</p>}
           </div>
           <div className="flex justify-end mt-1">
             <span className="text-xs text-gray-500 font-normal">{new Date(message.createdAt).toLocaleString()}</span>
@@ -40,7 +53,19 @@ export default function MessageBubble({
       <div className="max-w-xs lg:max-w-md">
         {isGroup && <p className="text-sm font-medium text-foreground mb-1">{message.senderName ?? "Sender"}</p>}
         <div className="bg-card border border-chat-border rounded-chat px-4 py-2">
-          <p className="text-card-foreground break-words font-normal">{message.text}</p>
+          {message.url && (
+            <div className="mb-2">
+              <Image
+                src={message.url}
+                alt={message.fileName || "Image"}
+                width={200}
+                height={200}
+                className="rounded-lg max-w-full h-auto"
+                unoptimized
+              />
+            </div>
+          )}
+          {message.text && <p className="text-card-foreground break-words font-normal">{message.text}</p>}
         </div>
         <div className="flex justify-start mt-1">
           <span className="text-xs text-gray-500 font-normal">{new Date(message.createdAt).toLocaleString()}</span>

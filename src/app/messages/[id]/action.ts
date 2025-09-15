@@ -241,11 +241,13 @@ export const useMessageSending = (
 
   // Handle sending messages
   const handleSendMessage = useCallback(
-    async (message: string) => {
-      if (sessionUser?.id && message !== "" && channelId && isConnected()) {
+    async (message: string, url?: string, fileName?: string) => {
+      const hasText = (message || "").trim().length > 0;
+      const hasFile = !!url;
+      if (sessionUser?.id && channelId && isConnected() && (hasText || hasFile)) {
         try {
           // Convert channelId to string for the new API
-          sendMessage(String(channelId), message);
+          sendMessage(String(channelId), message || "", url, fileName);
           setFormData({ message: "" });
           scrollToBottom();
         } catch (error) {
