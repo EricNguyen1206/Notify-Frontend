@@ -154,58 +154,75 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children, open, onO
       <DialogTrigger asChild>
         <div>{children}</div>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md bg-card text-card-foreground border-border">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User size={20} />
+          <DialogTitle className="flex items-center gap-2 text-foreground">
+            <User size={20} className="text-chat-primary" />
             Edit Profile
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col items-center gap-4 py-4">
-          <Avatar className="w-20 h-20">
+        <div className="flex flex-col items-center gap-4 py-6">
+          <Avatar className="w-20 h-20 ring-2 ring-chat-primary/20">
             <AvatarImage src={profile?.avatar} alt="avatar" />
-            <AvatarFallback className="text-2xl">
+            <AvatarFallback className="text-2xl bg-chat-primary text-white">
               {profile?.username && profile.username[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
-          <div className="text-center">
-            <p className="font-semibold text-lg">{profile?.username}</p>
+          <div className="text-center space-y-1">
+            <p className="font-semibold text-lg text-foreground">{profile?.username}</p>
             <p className="text-sm text-muted-foreground">{profile?.email}</p>
           </div>
         </div>
 
-        <form onSubmit={handleEditUserProfile} className="space-y-4">
+        <form onSubmit={handleEditUserProfile} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="username">New Username</Label>
+            <Label htmlFor="username" className="text-foreground font-medium">
+              New Username
+            </Label>
             <Input
               id="username"
               type="text"
               placeholder="Enter new username (optional)"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              className="bg-input-background border-input text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="avatar">New Avatar</Label>
-            <Input id="avatar" type="file" accept="image/*" ref={avatarRef} onChange={handleImageSelection} />
+            <Label htmlFor="avatar" className="text-foreground font-medium">
+              New Avatar
+            </Label>
+            <Input
+              id="avatar"
+              type="file"
+              accept="image/*"
+              ref={avatarRef}
+              onChange={handleImageSelection}
+              className="bg-input-background border-input text-foreground file:bg-chat-primary/10 file:text-chat-primary file:border-0 file:rounded-md file:px-3 file:py-1 file:text-sm file:font-medium"
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">New Password</Label>
+            <Label htmlFor="password" className="text-foreground font-medium">
+              New Password
+            </Label>
             <Input
               id="password"
               type="password"
               placeholder="Enter new password (optional)"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="bg-input-background border-input text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="currentPassword">Current Password *</Label>
+            <Label htmlFor="currentPassword" className="text-foreground font-medium">
+              Current Password <span className="text-chat-error">*</span>
+            </Label>
             <Input
               id="currentPassword"
               type="password"
@@ -213,10 +230,15 @@ const UserSettingDialog: React.FC<ParentComponentProps> = ({ children, open, onO
               value={formData.currentPassword}
               onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
               required
+              className="bg-input-background border-input text-foreground placeholder:text-muted-foreground focus-visible:ring-chat-primary"
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full bg-chat-primary hover:bg-chat-secondary text-white font-medium"
+            disabled={loading}
+          >
             {loading ? "Updating..." : "Update Profile"}
           </Button>
         </form>

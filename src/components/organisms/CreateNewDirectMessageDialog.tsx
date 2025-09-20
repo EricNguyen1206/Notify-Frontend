@@ -1,6 +1,7 @@
-import { Dispatch, FormEvent, SetStateAction, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Dispatch, FormEvent, SetStateAction, useMemo } from "react";
 
+import { UserSearchInput } from "@/components/molecules/UserSearchInput";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,11 +13,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { UserSearchInput } from "@/components/molecules/UserSearchInput";
 import { useCreateChannel } from "@/hooks/useCreateChannel";
 import type { ChatServiceInternalModelsUserResponse } from "@/services/schemas";
-import { useChannelStore } from "@/store/useChannelStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useChannelStore } from "@/store/useChannelStore";
 
 interface CreateNewDirectMessageDialogProps {
   openDirectMessage: boolean;
@@ -91,13 +91,15 @@ const CreateNewDirectMessageDialog = (props: CreateNewDirectMessageDialogProps) 
       <DialogTrigger asChild>
         <div>{children}</div>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-card text-card-foreground border-border">
         <DialogHeader>
-          <DialogTitle>New Direct Message</DialogTitle>
+          <DialogTitle className="text-foreground font-semibold">New Direct Message</DialogTitle>
         </DialogHeader>
         <form className="flex flex-col gap-6" onSubmit={handleCreateDirectMessage}>
           <div className="flex flex-col gap-3">
-            <Label className="text-[12px] font-bold text-left">SELECT USER</Label>
+            <Label className="text-xs font-bold text-left text-foreground uppercase tracking-wide">
+              Select User
+            </Label>
             <UserSearchInput
               selectedUsers={formData.selectedUsers}
               onUsersChange={handleUserSelection}
@@ -108,21 +110,30 @@ const CreateNewDirectMessageDialog = (props: CreateNewDirectMessageDialogProps) 
           </div>
 
           {existingDirectChannel && formData.selectedUsers.length === 1 && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
+            <div className="p-3 bg-chat-accent/10 border border-chat-accent/20 rounded-chat">
+              <p className="text-sm text-chat-accent font-medium">
                 Direct message channel already exists with {formData.selectedUsers[0]?.email}. Click "Open Channel" to
                 join.
               </p>
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="gap-3">
             <DialogClose asChild>
-              <Button type="button" variant="secondary">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-chat-border bg-background text-foreground hover:bg-chat-accent/10 hover:text-chat-primary hover:border-chat-primary"
+              >
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" variant="default" disabled={loading || formData.selectedUsers.length !== 1}>
+            <Button
+              type="submit"
+              variant="default"
+              className="bg-chat-primary hover:bg-chat-secondary text-white font-medium"
+              disabled={loading || formData.selectedUsers.length !== 1}
+            >
               {loading ? "Creating..." : existingDirectChannel ? "Open Channel" : "Create Direct Message"}
             </Button>
           </DialogFooter>

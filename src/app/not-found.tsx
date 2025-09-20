@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 
 import HomePageFooter from "@/components/molecules/HomePageFooter";
 import HomePageNavbar from "@/components/molecules/HomePageNavbar";
@@ -22,23 +21,6 @@ const NotFound = () => {
             here cooking up something good. Oh, you need something to read?
             These might help you:
           </p>
-          <div className="flex flex-col gap-1">
-            <Link href={"https://discordstatus.com"}>
-              <p className="text-[20px] text-chat-accent hover:text-chat-primary font-normal">
-                Status Page
-              </p>
-            </Link>
-            <Link href={"https://twitter.com/discord"}>
-              <p className="text-[20px] text-blue-400 hover:text-blue-500">
-                @Discord
-              </p>
-            </Link>
-            <Link href={"https://support.discord.com/hc/en-us"}>
-              <p className="text-[20px] text-blue-400 hover:text-blue-500">
-                Discord Support
-              </p>
-            </Link>
-          </div>
         </div>
         <Image
           src="/images/not-found-hero.png"
