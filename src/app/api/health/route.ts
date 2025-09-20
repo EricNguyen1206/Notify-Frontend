@@ -2,9 +2,14 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const res = await fetch(process.env.NEXT_PUBLIC_API_HEALTH + "", {
+    const healthUrl = process.env.NEXT_PUBLIC_API_HEALTH;
+    if (!healthUrl) {
+      throw new Error('NEXT_PUBLIC_API_HEALTH environment variable is not configured');
+    }
+    const res = await fetch(healthUrl, {
       cache: "no-store", // always call directly
     });
+    // …rest of your logic…
 
     if (res.ok) {
       return NextResponse.json(

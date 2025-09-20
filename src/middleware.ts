@@ -17,7 +17,10 @@ export default async function middleware(req: NextRequest) {
   const SKIP_PATHS = ["/api", "/_next", "/static", "/waking-up"];
   if (!SKIP_PATHS.some((p) => pathname.startsWith(p))) {
     try {
-      const res = await fetch(`${origin}/api/health`, { cache: "no-store" });
+      const res = await fetch(`${origin}/api/health`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(3000) // 3 second timeout
+      });
       if (!res.ok) {
         const url = req.nextUrl.clone();
         url.pathname = "/waking-up";
