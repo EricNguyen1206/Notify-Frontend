@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export default function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+export default async function middleware(req: NextRequest) {
+  const { pathname, origin } = req.nextUrl;
 
   // Define public paths that don't require authentication
   const PUBLIC_PATHS = ["/login", "/register", "/api"];
@@ -12,38 +12,48 @@ export default function middleware(req: NextRequest) {
   // Get token from cookies
   const token = req.cookies.get("token")?.value;
 
-  // If user is on an auth path (login, register, etc.)
+  // --- 🔥 NEW: Check backend health before anything else ---
+  // Skip health check for static/_next/api/waking-up to avoid loops
+  const SKIP_PATHS = ["/api", "/_next", "/static", "/waking-up"];
+  if (!SKIP_PATHS.some((p) => pathname.startsWith(p))) {
+    try {
+      const res = await fetch(`${origin}/api/health`, { cache: "no-store" });
+      if (!res.ok) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/waking-up";
+        return NextResponse.rewrite(url);
+      }
+    } catch (e) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/waking-up";
+      return NextResponse.rewrite(url);
+    }
+  }
+
+  // --- 🔑 Auth logic as before ---
   if (AUTH_PATHS.includes(pathname)) {
-    // If user has token, redirect to messages
     if (token) {
       return NextResponse.redirect(new URL("/messages", req.url));
     }
-    // If no token, allow access to auth pages
     return NextResponse.next();
   }
 
-  // If user is on public paths (API routes, static files, etc.)
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }
 
-  // For root path (home page), redirect based on token status
   if (pathname === "/") {
     if (token) {
-      // If user has token, redirect to messages
       return NextResponse.redirect(new URL("/messages", req.url));
     } else {
-      // If user doesn't have token, redirect to login
       return NextResponse.redirect(new URL("/login", req.url));
     }
   }
 
-  // For other protected routes, check if user has token
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // Allow access to protected routes
   return NextResponse.next();
 }
 
