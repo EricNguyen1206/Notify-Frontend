@@ -141,7 +141,7 @@ export default function ChatHeader(chat: ChatHeaderProps) {
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuContent align="start" className="w-56 bg-white! dark:bg-primary-purple!">
             <DropdownMenuItem onClick={handleViewMembers}>
               <Eye className="mr-2 h-4 w-4" />
               <span>View members</span>

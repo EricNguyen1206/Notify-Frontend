@@ -20,7 +20,7 @@ const AppSidebar = () => {
   } = useSidebarActions();
 
   return (
-    <Sidebar className="border-chat-border">
+    <Sidebar className="border-chat-border !bg-white dark:!bg-primary-purple">
       {/* Search Section*/}
       <SidebarHeader className="p-chat-outer">
         <div className="relative">

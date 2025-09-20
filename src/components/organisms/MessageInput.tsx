@@ -111,13 +111,6 @@ export default function MessageInput({
 
   return (
     <div className="p-chat-outer bg-background border-t border-chat-border">
-      {/* Connection status indicator */}
-      {!isConnected && (
-        <div className="mb-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-chat px-3 py-1 font-normal">
-          Not connected to chat server
-        </div>
-      )}
-
       <div className="h-[40px] flex items-center space-x-3">
         <div className="flex-1 w-full flex items-center space-x-2">
           <div className="">

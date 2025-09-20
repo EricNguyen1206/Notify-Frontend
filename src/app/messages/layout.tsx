@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
+import DynamicBreadcrumb from "@/components/molecules/DynamicBreadcrumb";
 import AppSidebar from "@/components/organisms/AppSidebar";
 import ScreenProvider from "@/components/templates/ScreenProvider";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -48,19 +48,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
                                     orientation="vertical"
                                     className="mr-2 data-[orientation=vertical]:h-4 bg-chat-border"
                                 />
-                                <Breadcrumb>
-                                    <BreadcrumbList>
-                                        <BreadcrumbItem className="hidden md:block">
-                                            <BreadcrumbLink href="/messages" className="font-normal">
-                                                Conversation
-                                            </BreadcrumbLink>
-                                        </BreadcrumbItem>
-                                        <BreadcrumbSeparator className="hidden md:block" />
-                                        <BreadcrumbItem>
-                                            <BreadcrumbPage className="font-medium">#channel-id</BreadcrumbPage>
-                                        </BreadcrumbItem>
-                                    </BreadcrumbList>
-                                </Breadcrumb>
+                                <DynamicBreadcrumb />
                             </div>
                         </header>
                         <div className="w-full h-full flex overflow-y-auto bg-background">

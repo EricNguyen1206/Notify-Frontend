@@ -1,5 +1,6 @@
 import { Dispatch, FormEvent, SetStateAction } from "react";
 
+import { UserSearchInput } from "@/components/molecules/UserSearchInput";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,9 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserSearchInput } from "@/components/molecules/UserSearchInput";
 import { useCreateChannel } from "@/hooks/useCreateChannel";
-import type { ChatServiceInternalModelsUserResponse } from "@/services/schemas";
 
 interface CreateNewChannelDialogProps {
   openCreateChannel: boolean;
@@ -51,18 +50,18 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
       <DialogTrigger asChild>
         <div>{children}</div>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-card text-card-foreground border-border">
         <DialogHeader>
-          <DialogTitle>Create Channel</DialogTitle>
+          <DialogTitle className="text-foreground font-semibold">Create Channel</DialogTitle>
         </DialogHeader>
         <form className="flex flex-col gap-6" onSubmit={handleCreateNewChannel}>
           <div className="flex flex-col gap-3">
-            <Label htmlFor="name" className="text-[12px] font-bold text-left">
-              CHANNEL NAME
+            <Label htmlFor="name" className="text-xs font-bold text-left text-foreground uppercase tracking-wide">
+              Channel Name
             </Label>
             <Input
               id="name"
-              className="col-span-3"
+              className="bg-input-background border-input text-foreground placeholder:text-muted-foreground focus-visible:ring-chat-primary"
               placeholder="Enter channel name"
               value={formData.name}
               onChange={(e) => {
@@ -72,7 +71,9 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Label className="text-[12px] font-bold text-left">SELECT USERS</Label>
+            <Label className="text-xs font-bold text-left text-foreground uppercase tracking-wide">
+              Select Users
+            </Label>
             <UserSearchInput
               selectedUsers={formData.selectedUsers}
               onUsersChange={updateSelectedUsers}
@@ -82,13 +83,22 @@ const CreateNewChannelDialog = (props: CreateNewChannelDialogProps) => {
             />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-3">
             <DialogClose asChild>
-              <Button type="button" variant="secondary">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-chat-border bg-background text-foreground hover:bg-chat-accent/10 hover:text-chat-primary hover:border-chat-primary"
+              >
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" variant="default" disabled={loading || formData.selectedUsers.length < 2}>
+            <Button
+              type="submit"
+              variant="default"
+              className="bg-chat-primary hover:bg-chat-secondary text-white font-medium"
+              disabled={loading || formData.selectedUsers.length < 2}
+            >
               {loading ? "Creating..." : "Create Channel"}
             </Button>
           </DialogFooter>
